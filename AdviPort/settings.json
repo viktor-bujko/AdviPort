@@ -1,0 +1,15 @@
+﻿{
+	"appid": "AdviPort",
+	"author": "Viktor Bujko",
+	"apikeypath": "./apiaccess.key",
+	"MainPageStyle": "simple",
+	"modules": [
+		"register",
+		"add_favourite",
+		"remove_favourite",
+		"select_airport",
+		"pinpoint",
+		"print_schedule",
+		"about"
+	]
+}
