@@ -6,6 +6,7 @@ namespace AdviPort {
 
 	interface IPlugin {
 		string Name { get; }
+		string Description { get; }
 		void Invoke(object[] args);
 	}
 
@@ -34,6 +35,8 @@ namespace AdviPort {
 	class AboutAppPlugin : IPlugin {
 		public string Name => "About Application";
 
+		public string Description => "Prints information about application.";
+
 		public void Invoke(object[] args) {
 			
 			/*
@@ -46,6 +49,8 @@ namespace AdviPort {
 	class ExitAppPlugin : IPlugin {
 		public string Name => "Exit Application";
 
+		public string Description => "Quits the application";
+
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
 		}
@@ -53,6 +58,8 @@ namespace AdviPort {
 
 	class RegisterAPIKeyPlugin : IPlugin {
 		public string Name => "Register API key";
+
+		public string Description => "Registers a new user and his / her API key";
 
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
@@ -62,6 +69,8 @@ namespace AdviPort {
 	class AddFavouriteAirportPlugin : IPlugin {
 		public string Name => "Add a favourite airport";
 
+		public string Description => "Adds an airport into current account's bookmarks";
+
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
 		}
@@ -69,6 +78,8 @@ namespace AdviPort {
 
 	class RemoveFavouriteAirportPlugin : IPlugin {
 		public string Name => "Remove a favourite airport";
+
+		public string Description => "Removes an airport from current account's bookmarks";
 
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
@@ -78,6 +89,8 @@ namespace AdviPort {
 	class SelectAirportPlugin : IPlugin {
 		public string Name => "Select an airport";
 
+		public string Description => "Selects an airport to work with";
+
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
 		}
@@ -85,6 +98,8 @@ namespace AdviPort {
 
 	class PinpointAirportPlugin : IPlugin {
 		public string Name => "Pinpoint an airport";
+
+		public string Description => "Default description";
 
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
@@ -94,6 +109,8 @@ namespace AdviPort {
 	class PrintScheduleAirport : IPlugin {
 		public string Name => "Print the flights schedule of a selected airport";
 
+		public string Description => "Prints the flights schedule for selected airport";
+
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
 		}
@@ -101,6 +118,8 @@ namespace AdviPort {
 
 	class SearchByFlightPlugin : IPlugin {
 		public string Name => "Search for a flight by the flight number (e.g. AF 1438)";
+
+		public string Description => "Searches for a concrete flight (e.g. AF 1438)";
 
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
@@ -110,6 +129,8 @@ namespace AdviPort {
 	class SaveFlightInfoPlugin : IPlugin {
 		public string Name => "Create a bookmark for a given flight";
 
+		public string Description => "Moves a flight into the followed ones";
+
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
 		}
@@ -118,6 +139,8 @@ namespace AdviPort {
 	class AirportInfoPlugin : IPlugin {
 		public string Name => "Print basic information about a specified airport";
 
+		public string Description => "Prints available information about an airport";
+
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();
 		}
@@ -125,6 +148,8 @@ namespace AdviPort {
 
 	class AircraftInfoPlugin : IPlugin {
 		public string Name => "Get information about different types of airplanes";
+
+		public string Description => "Prints available information about an aircraft";
 
 		public void Invoke(object[] args) {
 			throw new NotImplementedException();

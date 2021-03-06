@@ -9,26 +9,17 @@ namespace AdviPort {
 	class Program {
 		static void Main(string[] args) {
 
-			var settings = GeneralApplicationSettings.GetAppSettings();
+			while (true) {
+				var settings = GeneralApplicationSettings.GetAppSettings();
 
-			IMainContentPrinter mainPagePrinter = MainPagePrinterSelector.SelectMainPagePrinter(settings);
+				IMainContentPrinter mainPagePrinter = MainPagePrinterSelector.SelectMainPagePrinter(settings);
 
-			mainPagePrinter.PrintMainPageContent(Console.Out, settings);
+				mainPagePrinter.PrintMainPageContent(Console.Out, settings);
 
-			Console.ReadLine();
+				Console.ReadLine();
 
-			Console.Clear();
-
-
-			/*
-			 * Keď načítam nastavenia aplikácie, tak si z nich vyberiem to, ktorý MainPagePrinter sa má vybrať
-			 * (napr nejaký simple, classic, decorative), a budem chcieť aby sa ten mainpage obnovoval a používal stále keď 
-			 * sa do menu vrátim -> asi zakaždým čítať tie nastavenia a meniť podľa nich správanie programu
-			 * 
-			 * simple - len vypíše nejaké veci a ponuku
-			 * decorative - nájdi adviport ascii symbol
-			 * descriptive - pridá nejaké vysvetlivky ku simple alebo také niečo
-			 */
+				Console.Clear();
+			}
 		}
 	}
 

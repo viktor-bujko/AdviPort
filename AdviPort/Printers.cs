@@ -29,7 +29,8 @@ namespace AdviPort {
 				"" => SimpleMainPagePrinter.Instance,
 				"simple" => SimpleMainPagePrinter.Instance,
 				"decorative" => DecorativeMainPagePrinter.Instance,
-				/*"descriptive" => new DescriptiveMainPagePrinter(),
+				"descriptive" => DescriptiveMainPagePrinter.Instance,
+				/*
 				"decorative/descriptive" => new DecorativeMainPagePrinter(new DescriptiveMainPagePrinter()),
 				"descriptive/decorative" => new DecorativeMainPagePrinter(new DescriptiveMainPagePrinter()),
 				*/
@@ -171,6 +172,40 @@ ________________________________________________________________________________
 			writer.WriteLine(pluginToPrint + decorationImg);
 		}
 	}
+	class DescriptiveMainPagePrinter : CommonMainComponentPrinter {
+
+		private static readonly DescriptiveMainPagePrinter instance = new DescriptiveMainPagePrinter(SimpleMainPagePrinter.Instance);
+
+		public static DescriptiveMainPagePrinter Instance {
+			get => instance;
+		}
+
+		private CommonMainComponentPrinter BaseMainPagePrinter { get; }
+
+		private DescriptiveMainPagePrinter(CommonMainComponentPrinter basePrinter) {
+			BaseMainPagePrinter = basePrinter;
+		}
+
+		public override void PrintMainPageContent(TextWriter writer, GeneralApplicationSettings settings) {
+			writer.WriteLine(GetMainPageHeader());
+
+			var plugins = BaseMainPagePrinter.GetAvailablePlugins(settings);
+
+			for (int i = 0; i < plugins.Length; i++) {
+				PrintPlugin(writer, plugins[i], i + 1);
+			}
+		}
+
+		public override string GetMainPageHeader() {
+			return BaseMainPagePrinter.GetMainPageHeader();
+		}
+
+		public override void PrintPlugin(TextWriter writer, IPlugin plugin, int orderNumber) {
+			BaseMainPagePrinter.PrintPlugin(writer, plugin, orderNumber);
+			writer.WriteLine($"   \u2192 { plugin.Description }\n");
+		}
+	}
+
 
 	class PageDecoration {
 
@@ -288,19 +323,6 @@ ________________________________________________________________________________
 				if (i < RowsSize - 1) sb.Append(Environment.NewLine);
 			}
 			return sb.ToString();
-		}
-	}
-
-	class DescriptiveMainPagePrinter : IMainContentPrinter {
-
-		IMainPagePrinter BaseMainPagePrinter { get; }
-
-		public DescriptiveMainPagePrinter(IMainPagePrinter basePrinter) {
-			BaseMainPagePrinter = basePrinter;
-		}
-
-		public void PrintMainPageContent(TextWriter writer, GeneralApplicationSettings settings) {
-			
 		}
 	}
 }
