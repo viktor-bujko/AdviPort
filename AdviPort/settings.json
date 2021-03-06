@@ -1,15 +1,22 @@
 ﻿{
 	"appid": "AdviPort",
 	"author": "Viktor Bujko",
+	"version": "1.0.0",
 	"apikeypath": "./apiaccess.key",
-	"MainPageStyle": "simple",
-	"modules": [
+	"MainPageStyle": "decorative",
+	"Decorations": [
+		"./tower_decoration.txt",
+		"./plane_decoration.txt"
+	],
+	"AvailablePlugins": [
 		"register",
 		"add_favourite",
 		"remove_favourite",
 		"select_airport",
 		"pinpoint",
 		"print_schedule",
+		"search_by_flight",
+		"airport_info",
 		"about"
 	]
 }

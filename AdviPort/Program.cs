@@ -9,11 +9,16 @@ namespace AdviPort {
 	class Program {
 		static void Main(string[] args) {
 
-			var settings = GetAppSettings();
+			var settings = GeneralApplicationSettings.GetAppSettings();
 
-			MainPagePrinter mainPagePrinter = MainPagePrinter.SelectPrinter(settings.MainPageStyle);
+			IMainContentPrinter mainPagePrinter = MainPagePrinterSelector.SelectMainPagePrinter(settings);
 
-			mainPagePrinter.Print(Console.Out, settings);
+			mainPagePrinter.PrintMainPageContent(Console.Out, settings);
+
+			Console.ReadLine();
+
+			Console.Clear();
+
 
 			/*
 			 * Keď načítam nastavenia aplikácie, tak si z nich vyberiem to, ktorý MainPagePrinter sa má vybrať
@@ -24,14 +29,22 @@ namespace AdviPort {
 			 * decorative - nájdi adviport ascii symbol
 			 * descriptive - pridá nejaké vysvetlivky ku simple alebo také niečo
 			 */
-
-			
 		}
+	}
 
-		private static GeneralApplicationSettings GetAppSettings() {
+	class GeneralApplicationSettings {
+		public string ApiKeyPath { get; set; }
+		public string[] SubCommands { get; set; }
+		public string[] AvailablePlugins { get; set; }
+		public string MainPageStyle { get; set; }
+		public string[] Decorations { get; set; }
 
-			using var settingsFileReader = GetSettingsFileReader(Directory.GetCurrentDirectory());
-			
+		public static GeneralApplicationSettings GetAppSettings() {
+
+			var filePaths = SearchForFiles(Directory.GetCurrentDirectory(), "*settings.json", requiredFiles: 1);
+
+			using var settingsFileReader = GetTextReader(filePaths);
+
 			if (settingsFileReader is null) throw new ArgumentException();
 
 			var options = new JsonSerializerOptions() { PropertyNameCaseInsensitive = true };
@@ -43,33 +56,36 @@ namespace AdviPort {
 			return settings;
 		}
 
-		private static TextReader GetSettingsFileReader(string currentDirectoryPath, int depth = 3) {
+		public static string[] SearchForFiles(string path, string pattern, int depth = 3, int requiredFiles = -1) {
 
-			string[] settingsFilesPaths = Directory.GetFiles(currentDirectoryPath, "*settings.json", SearchOption.AllDirectories);
+			string[] filePaths;
 
-			if (settingsFilesPaths.Length != 1) {
+			try {
+				filePaths = Directory.GetFiles(path, pattern, SearchOption.AllDirectories);
+			} catch { 
+				return null;
+			}
+
+			if (requiredFiles > -1 && filePaths.Length != requiredFiles) {
 				if (depth > 0) {
-					return GetSettingsFileReader(Directory.GetParent(currentDirectoryPath).FullName, depth - 1);
+					return SearchForFiles(Directory.GetParent(path).FullName, pattern, depth - 1, requiredFiles);
 				} else {
 					throw new ArgumentException("Make sure EXACTLY one \"settings.json\" file exists in the project directory and its subdirectories.");
 				}
 			}
 
+			return filePaths;
+		}
+
+		public static TextReader GetTextReader(string[] paths, int index = 0) {
 			TextReader textReader;
 			try {
-				textReader = new StreamReader(settingsFilesPaths[0]);
+				textReader = new StreamReader(paths[index]);
 			} catch {
 				textReader = null;
 			}
 
 			return textReader;
 		}
-	}
-
-	class GeneralApplicationSettings {
-		public string ApiKeyPath { get; set; }
-		public string[] SubCommands { get; set; }
-		public string[] Modules { get; set; }
-		public string MainPageStyle { get; set; }
 	}
 }
