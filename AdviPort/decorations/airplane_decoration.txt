@@ -1,0 +1,4 @@
+﻿# This file has to be inside "decorations/" directory.
+       __|__
+--@--@--(_)--@--@--
+       " ' "

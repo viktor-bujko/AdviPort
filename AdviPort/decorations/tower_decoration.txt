@@ -1,0 +1,15 @@
+﻿# This file has to be inside "decorations/" directory.
+__|__
+\___/
+ | |
+ | |
+_|_|________________
+         /|\
+       */ | \*
+       / -+- \
+   ---o--(_)--o---
+     /  " ' "  \
+   */     |     \*
+   /      |      \
+ */       |       \*
+   © Donovan Bake   
