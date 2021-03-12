@@ -9,15 +9,40 @@ namespace AdviPort {
 	class Program {
 		static void Main(string[] args) {
 
-			while (true) {
+			// TODO: Support možnosti kedy správanie aplikácie nebude interaktívne
+			// teda vedieť dopísať správanie programu, kedy sa spracuje nejaký cmdline príkaz a podľa neho sa postaví query
+
+			var reader = Console.In;
+			var writer = Console.Out;
+			bool exit = false;
+
+			while (! exit) {
 				var settings = GeneralApplicationSettings.GetAppSettings();
 
-				IMainContentPrinter mainPagePrinter = MainPagePrinterSelector.SelectMainPagePrinter(settings);
+				if (writer.Equals(Console.Out)) {
+					Console.WindowWidth = 112;
+				}
 
-				mainPagePrinter.PrintMainPageContent(Console.Out, settings);
+				IMainPageHandler mainHandler = MainPageHandlerSelector.SelectMainPageHandler(settings, reader, writer);
+
+				mainHandler.PrintMainPageContent(settings);
+
+				var input = mainHandler.ReadUserInput();
+
+				IPlugin chosenPlugin = mainHandler.HandlePluginChoice(input);
+
+				if (!(chosenPlugin is null)) {
+					if (chosenPlugin is ExitAppPlugin) {
+						exit = true;
+					}
+
+					Console.Clear();
+					chosenPlugin.Invoke(null);
+				} else {
+					// Happens when the plugin to invoke could not be determined from the user's choice.
+				}
 
 				Console.ReadLine();
-
 				Console.Clear();
 			}
 		}

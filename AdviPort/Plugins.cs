@@ -7,10 +7,13 @@ namespace AdviPort {
 	interface IPlugin {
 		string Name { get; }
 		string Description { get; }
+
+		//TODO: string QueryName { get; } - ak chcem teda dopísať modul kedy sa bude dať volať priamo plugin z cmdline
+
 		void Invoke(object[] args);
 	}
 
-	internal class PluginSelector {
+	internal static class PluginSelector {
 		internal static IPlugin SearchPluginByName(string pluginName) {
 			IPlugin plugin = pluginName switch {
 				"register" => new RegisterAPIKeyPlugin(),
@@ -30,6 +33,18 @@ namespace AdviPort {
 
 			return plugin;
 		}
+
+		internal static bool TryGetPluginFromInputString(string input, IPlugin[] plugins, out List<IPlugin> filteredPlugins) {
+			filteredPlugins = new List<IPlugin>();
+
+			for (int i = 0; i < plugins.Length; i++) {
+				bool inputIsSubstring = plugins[i].Name.ToLower().StartsWith(input.ToLower());
+
+				if (inputIsSubstring) filteredPlugins.Add(plugins[i]);
+			}
+
+			return filteredPlugins.Count == 1;
+		}
 	}
 
 	class AboutAppPlugin : IPlugin {
@@ -38,11 +53,7 @@ namespace AdviPort {
 		public string Description => "Prints information about application.";
 
 		public void Invoke(object[] args) {
-			
-			/*
-			 * Ensure, that args array contains a TextWriter where the about should be written and also settings from where the information is taken.
-			 * 
-			 */
+			Console.WriteLine("Hello From about!");
 		}
 	}
 
@@ -52,7 +63,7 @@ namespace AdviPort {
 		public string Description => "Quits the application";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine("Hello From Exit!");
 		}
 	}
 
@@ -62,7 +73,7 @@ namespace AdviPort {
 		public string Description => "Registers a new user and his / her API key";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine("Hello From Register!");
 		}
 	}
 
@@ -72,7 +83,7 @@ namespace AdviPort {
 		public string Description => "Adds an airport into current account's bookmarks";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -82,7 +93,7 @@ namespace AdviPort {
 		public string Description => "Removes an airport from current account's bookmarks";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -92,7 +103,7 @@ namespace AdviPort {
 		public string Description => "Selects an airport to work with";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -102,7 +113,7 @@ namespace AdviPort {
 		public string Description => "Default description";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -112,7 +123,7 @@ namespace AdviPort {
 		public string Description => "Prints the flights schedule for selected airport";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -122,7 +133,7 @@ namespace AdviPort {
 		public string Description => "Searches for a concrete flight (e.g. AF 1438)";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -132,7 +143,7 @@ namespace AdviPort {
 		public string Description => "Moves a flight into the followed ones";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -142,7 +153,7 @@ namespace AdviPort {
 		public string Description => "Prints available information about an airport";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 
@@ -152,7 +163,7 @@ namespace AdviPort {
 		public string Description => "Prints available information about an aircraft";
 
 		public void Invoke(object[] args) {
-			throw new NotImplementedException();
+			Console.WriteLine($"Hello From {Name}!");
 		}
 	}
 

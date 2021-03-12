@@ -6,7 +6,5 @@ namespace AdviPort {
 	
 	interface IArgumentParser {
 		void Parse(string[] args);
-	}
-
-	
+	}	
 }

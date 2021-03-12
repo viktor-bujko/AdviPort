@@ -3,7 +3,7 @@
 	"author": "Viktor Bujko",
 	"version": "1.0.0",
 	"apikeypath": "./apiaccess.key",
-	"MainPageStyle": "",
+	"MainPageStyle": "classic",
 	"Decorations": [
 		"./tower_decoration.txt",
 		"./plane_decoration.txt"
