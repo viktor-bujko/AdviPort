@@ -2,7 +2,7 @@
 	"appid": "AdviPort",
 	"author": "Viktor Bujko",
 	"version": "1.0.0",
-	"apikeypath": "./apiaccess.key",
+	"apikeypath": "keys/api.key",
 	"MainPageStyle": "classic",
 	"Decorations": [
 		"./tower_decoration.txt",

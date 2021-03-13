@@ -10,7 +10,8 @@ namespace AdviPort {
 		static void Main(string[] args) {
 
 			// TODO: Support možnosti kedy správanie aplikácie nebude interaktívne
-			// teda vedieť dopísať správanie programu, kedy sa spracuje nejaký cmdline príkaz a podľa neho sa postaví query
+			// teda vedieť dopísať správanie programu, kedy sa spracuje nejaký
+			// cmdline príkaz a podľa neho sa postaví query
 
 			var reader = Console.In;
 			var writer = Console.Out;
@@ -29,20 +30,28 @@ namespace AdviPort {
 
 				var input = mainHandler.ReadUserInput();
 
-				IPlugin chosenPlugin = mainHandler.HandlePluginChoice(input);
+				IExecutablePlugin chosenPlugin = mainHandler.HandlePluginChoice(input);
 
-				if (!(chosenPlugin is null)) {
-					if (chosenPlugin is ExitAppPlugin) {
-						exit = true;
-					}
-
+				if (chosenPlugin is null) {
+					Console.ReadLine();
 					Console.Clear();
-					chosenPlugin.Invoke(null);
-				} else {
-					// Happens when the plugin to invoke could not be determined from the user's choice.
+					continue;
 				}
 
-				Console.ReadLine();
+				Console.Clear();
+
+				int exitCode = chosenPlugin.Invoke(args);
+
+				if (chosenPlugin is ExitAppPlugin) {
+					exit = exitCode == 0;
+				}
+
+				if (exitCode != 0) {
+					Console.Error.WriteLine("An error occured during the execution of chosen plugin.");
+				}
+
+				writer.WriteLine("Press any key to continue.");
+				Console.ReadKey();
 				Console.Clear();
 			}
 		}
@@ -57,7 +66,9 @@ namespace AdviPort {
 
 		public static GeneralApplicationSettings GetAppSettings() {
 
-			var filePaths = SearchForFiles(Directory.GetCurrentDirectory(), "*settings.json", requiredFiles: 1);
+			var filePaths = SearchFiles(Directory.GetCurrentDirectory(), "*settings.json", 1);
+
+			if (filePaths is null) { throw new FileNotFoundException("A required file has not been found.");}
 
 			using var settingsFileReader = GetTextReader(filePaths);
 
@@ -72,7 +83,7 @@ namespace AdviPort {
 			return settings;
 		}
 
-		public static string[] SearchForFiles(string path, string pattern, int depth = 3, int requiredFiles = -1) {
+		public static string[] SearchFiles(string path, string pattern, int requiredFiles = -1, int depth = 5) {
 
 			string[] filePaths;
 
@@ -84,13 +95,36 @@ namespace AdviPort {
 
 			if (requiredFiles > -1 && filePaths.Length != requiredFiles) {
 				if (depth > 0) {
-					return SearchForFiles(Directory.GetParent(path).FullName, pattern, depth - 1, requiredFiles);
+					return SearchFiles(Directory.GetParent(path).FullName, pattern, requiredFiles, depth - 1);
 				} else {
-					throw new ArgumentException("Make sure EXACTLY one \"settings.json\" file exists in the project directory and its subdirectories.");
+					return null;
 				}
 			}
 
 			return filePaths;
+		}
+
+		public static string[] SearchDir(string startDirPath, string targetDirName, int depth = 5) {
+			List<string> targetDirPaths = new List<string>();
+
+			var options = new EnumerationOptions() {
+				IgnoreInaccessible = true
+			};
+			var matchingDirs = Directory.EnumerateDirectories(startDirPath, targetDirName, options);
+
+			foreach(string dirPath in matchingDirs) {
+				targetDirPaths.Add(dirPath);
+			}
+			
+			if (targetDirPaths.Count == 0) {
+				if (depth > 0) {
+					return SearchDir(Directory.GetParent(startDirPath).FullName, targetDirName, depth - 1);
+				} else {
+					return null;
+				}
+			}
+
+			return targetDirPaths.ToArray();
 		}
 
 		public static TextReader GetTextReader(string[] paths, int index = 0) {

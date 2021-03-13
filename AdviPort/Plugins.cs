@@ -1,22 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Security;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace AdviPort {
 
-	interface IPlugin {
+	interface IExecutablePlugin {
+		int Invoke(object[] args);
+	}
+
+	interface IPlugin : IExecutablePlugin {
 		string Name { get; }
 		string Description { get; }
 
 		//TODO: string QueryName { get; } - ak chcem teda dopísať modul kedy sa bude dať volať priamo plugin z cmdline
-
-		void Invoke(object[] args);
 	}
 
 	internal static class PluginSelector {
-		internal static IPlugin SearchPluginByName(string pluginName) {
+		internal static IPlugin SearchPluginByName(string pluginName, TextReader reader, TextWriter writer) {
 			IPlugin plugin = pluginName switch {
-				"register" => new RegisterAPIKeyPlugin(),
+				"register" => new RegisterAPIKeyPlugin(reader, writer),
 				"add_favourite" => new AddFavouriteAirportPlugin(),
 				"remove_favourite" => new RemoveFavouriteAirportPlugin(),
 				"select_airport" => new SelectAirportPlugin(),
@@ -34,11 +40,33 @@ namespace AdviPort {
 			return plugin;
 		}
 
+		public static IPlugin[] GetAvailablePlugins(GeneralApplicationSettings settings, TextReader reader, TextWriter writer) {
+
+			List<IPlugin> plugins = new List<IPlugin>(settings.AvailablePlugins.Length);
+
+			foreach (string pluginName in settings.AvailablePlugins) {
+				var plugin = SearchPluginByName(pluginName, reader, writer);
+				if (plugin is null) continue;
+
+				plugins.Add(plugin);
+			}
+
+			return plugins.ToArray();
+		}
+
 		internal static bool TryGetPluginFromInputString(string input, IPlugin[] plugins, out List<IPlugin> filteredPlugins) {
 			filteredPlugins = new List<IPlugin>();
+			input = input.ToLower();
+
+			if (string.IsNullOrEmpty(input)) return false;
+
+			if (input == "exit" || input == "quit") {
+				filteredPlugins.Add(new ExitAppPlugin());
+				return true;
+			}
 
 			for (int i = 0; i < plugins.Length; i++) {
-				bool inputIsSubstring = plugins[i].Name.ToLower().StartsWith(input.ToLower());
+				bool inputIsSubstring = plugins[i].Name.ToLower().StartsWith(input);
 
 				if (inputIsSubstring) filteredPlugins.Add(plugins[i]);
 			}
@@ -47,13 +75,43 @@ namespace AdviPort {
 		}
 	}
 
+	abstract class InputReadablePlugin : IUserInterfaceReader {
+		protected abstract TextReader Reader { get; }
+		protected abstract TextWriter Writer { get; }
+
+		public virtual string ReadUserInput(string initialPrompt) {
+			if (!(initialPrompt is null)) {
+				Writer.Write(initialPrompt + ": ");
+			}
+
+			var input = Reader.ReadLine();
+
+			if (input is null) throw new ArgumentNullException("The input should not be null.");
+
+			return input.Trim();
+		}
+	}
+
 	class AboutAppPlugin : IPlugin {
 		public string Name => "About Application";
 
 		public string Description => "Prints information about application.";
 
-		public void Invoke(object[] args) {
-			Console.WriteLine("Hello From about!");
+		public int Invoke(object[] args) {
+			string[] paths = GeneralApplicationSettings.SearchFiles(Directory.GetCurrentDirectory(), "about.txt", 1);
+
+			if (paths is null) throw new FileNotFoundException("A required file has not been found.");
+
+			TextReader aboutReader = GeneralApplicationSettings.GetTextReader(paths);
+
+			if (aboutReader is null) { 
+				Console.Error.WriteLine("Specification file could not be found.");
+				return 1;
+			}
+
+			Console.WriteLine(aboutReader.ReadToEnd());
+
+			return 0;
 		}
 	}
 
@@ -62,18 +120,100 @@ namespace AdviPort {
 
 		public string Description => "Quits the application";
 
-		public void Invoke(object[] args) {
-			Console.WriteLine("Hello From Exit!");
+		public int Invoke(object[] args) {
+			Console.WriteLine("Exiting ADVIPORT application.");
+			return 0;
 		}
 	}
 
-	class RegisterAPIKeyPlugin : IPlugin {
+	class RegisterAPIKeyPlugin : InputReadablePlugin, IPlugin {
 		public string Name => "Register API key";
 
 		public string Description => "Registers a new user and his / her API key";
 
-		public void Invoke(object[] args) {
-			Console.WriteLine("Hello From Register!");
+		protected override TextReader Reader { get; }
+
+		protected override TextWriter Writer { get; }
+
+		public RegisterAPIKeyPlugin(TextReader reader, TextWriter writer) {
+			Reader = reader;
+			Writer = writer;
+		}
+
+		public int Invoke(object[] args) {
+
+			var userName = ReadUserInput("Please enter a name you want to register");
+			var profileFileName = $"{userName}_userprofile.apt";
+
+			string profilesDir = GetProfilesDirectory();
+
+			if (profilesDir is null) { return 1; }
+
+			FileStream proFileStream = CreateNewProfile(profilesDir, profileFileName, out string profileFilePath);
+
+			if (proFileStream is null) {
+				Console.Error.WriteLine("An error ocurred while creating a new profile file for this user.");
+				return 1;
+			}
+
+			using (proFileStream) {
+				var apiKey = ReadUserInput("Please enter the API key you want to use in the application");
+
+				try {
+					apiKey = Encryptor.Encrypt(apiKey);
+
+					var profile = new UserProfile(apiKey);
+
+					string serializedProfile = JsonSerializer.Serialize<UserProfile>(profile);
+
+					proFileStream.Write(Encoding.UTF8.GetBytes(serializedProfile));
+				} catch {
+					// Log the error 
+					// User profile should be deleted if anything goes wrong 
+					File.Delete(profileFilePath);
+					return 1;
+				}
+
+				Console.WriteLine("Registration of a new user is successful.");
+			}
+
+			return 0;
+		}
+
+		private FileStream CreateNewProfile(string profilesDir, string fileName, out string filePath) {
+			filePath = profilesDir + Path.DirectorySeparatorChar + fileName;
+
+			if (!UsernameIsFree(profilesDir, fileName)) {
+				Console.Error.WriteLine("A user with given username already exists. Please choose another name.");
+				return null;
+			}
+
+			try {
+				var newProfileStream = File.Create(filePath);
+				return newProfileStream;
+			} catch {
+				return null;
+			}
+		}
+
+		private bool UsernameIsFree(string profileDir, string profileFileName) {
+			string[] profilePaths = GeneralApplicationSettings.SearchFiles(profileDir, profileFileName);
+
+			// If true, userprofile file with such username can be created.
+			return profilePaths is null || profilePaths.Length == 0;
+		}
+
+		private string GetProfilesDirectory() {
+
+			string[] foundProfileDirs = GeneralApplicationSettings.SearchDir(Directory.GetCurrentDirectory(), "profiles");
+			string profilesDir = foundProfileDirs[0];
+
+			if (foundProfileDirs is null) {
+				Console.Error.WriteLine("Directory with application profile could not be found. Please move \"profiles/\" directory into the project root directory.");
+				return null;
+			}
+
+			return profilesDir;
 		}
 	}
 
@@ -82,8 +222,11 @@ namespace AdviPort {
 
 		public string Description => "Adds an airport into current account's bookmarks";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
+
+			// Require the user to be registered
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -92,8 +235,11 @@ namespace AdviPort {
 
 		public string Description => "Removes an airport from current account's bookmarks";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
+
+			// Require the user to be registered
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -102,8 +248,9 @@ namespace AdviPort {
 
 		public string Description => "Selects an airport to work with";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -112,8 +259,9 @@ namespace AdviPort {
 
 		public string Description => "Default description";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -122,8 +270,9 @@ namespace AdviPort {
 
 		public string Description => "Prints the flights schedule for selected airport";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -132,8 +281,9 @@ namespace AdviPort {
 
 		public string Description => "Searches for a concrete flight (e.g. AF 1438)";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -142,8 +292,9 @@ namespace AdviPort {
 
 		public string Description => "Moves a flight into the followed ones";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -152,8 +303,9 @@ namespace AdviPort {
 
 		public string Description => "Prints available information about an airport";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
@@ -162,8 +314,9 @@ namespace AdviPort {
 
 		public string Description => "Prints available information about an aircraft";
 
-		public void Invoke(object[] args) {
+		public int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
+			return 0;
 		}
 	}
 
