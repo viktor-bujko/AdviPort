@@ -20,6 +20,9 @@ namespace AdviPort {
 		};
 		
 		public static string Encrypt(string input) {
+
+			if (input is null) return null;
+
 			try {
 				using Aes aes = Aes.Create(); 
 				aes.Key = key;

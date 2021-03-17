@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace AdviPort {
 	class Program {
@@ -66,7 +67,7 @@ namespace AdviPort {
 
 		public static GeneralApplicationSettings GetAppSettings() {
 
-			var filePaths = SearchFiles(Directory.GetCurrentDirectory(), "*settings.json", 1);
+			var filePaths = SearchFiles(Directory.GetCurrentDirectory(), "*settings.json", requiredFiles: 1);
 
 			if (filePaths is null) { throw new FileNotFoundException("A required file has not been found.");}
 
@@ -85,11 +86,19 @@ namespace AdviPort {
 
 		public static string[] SearchFiles(string path, string pattern, int requiredFiles = -1, int depth = 5) {
 
+			if (string.IsNullOrEmpty(path)) { 
+				throw new ArgumentNullException($"Cannot search for files if {nameof(path)} is null or empty string."); 
+			}
+
+			if (string.IsNullOrEmpty(pattern)) {
+				throw new ArgumentNullException($"Cannot search for files if {nameof(pattern)} is null or empty string.");
+			}
+
 			string[] filePaths;
 
 			try {
 				filePaths = Directory.GetFiles(path, pattern, SearchOption.AllDirectories);
-			} catch { 
+			} catch {
 				return null;
 			}
 
@@ -104,27 +113,26 @@ namespace AdviPort {
 			return filePaths;
 		}
 
-		public static string[] SearchDir(string startDirPath, string targetDirName, int depth = 5) {
+		public static string SearchDir(string startDirectoryPath, string targetDirectoryName, int depth = 5) {
 			List<string> targetDirPaths = new List<string>();
 
-			var options = new EnumerationOptions() {
-				IgnoreInaccessible = true
-			};
-			var matchingDirs = Directory.EnumerateDirectories(startDirPath, targetDirName, options);
+			var options = new EnumerationOptions() { IgnoreInaccessible = true };
+			var matchingDirs = Directory.EnumerateDirectories(startDirectoryPath, targetDirectoryName, options);
 
-			foreach(string dirPath in matchingDirs) {
+			foreach (string dirPath in matchingDirs) {
 				targetDirPaths.Add(dirPath);
-			}
-			
-			if (targetDirPaths.Count == 0) {
-				if (depth > 0) {
-					return SearchDir(Directory.GetParent(startDirPath).FullName, targetDirName, depth - 1);
-				} else {
-					return null;
-				}
+				break;
 			}
 
-			return targetDirPaths.ToArray();
+			if (targetDirPaths.Count > 0) { return targetDirPaths[0]; }
+
+			if (depth > 0) {
+				// Trying to search in the parent directory
+				return SearchDir(Directory.GetParent(startDirectoryPath).FullName, targetDirectoryName, depth - 1);
+			} else {
+				// Still nothing found - giving up on searching
+				return null;
+			}
 		}
 
 		public static TextReader GetTextReader(string[] paths, int index = 0) {
