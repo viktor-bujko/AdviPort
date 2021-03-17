@@ -19,65 +19,14 @@ namespace AdviPort {
 		//TODO: string QueryName { get; } - ak chcem teda dopísať modul kedy sa bude dať volať priamo plugin z cmdline
 	}
 
-	internal static class PluginSelector {
-		internal static IPlugin SearchPluginByName(string pluginName, TextReader reader, TextWriter writer) {
-			IPlugin plugin = pluginName switch {
-				"register" => new RegisterAPIKeyPlugin(reader, writer),
-				"add_favourite" => new AddFavouriteAirportPlugin(),
-				"remove_favourite" => new RemoveFavouriteAirportPlugin(),
-				"select_airport" => new SelectAirportPlugin(),
-				"pinpoint" => new PinpointAirportPlugin(),
-				"print_schedule" => new PrintScheduleAirport(),
-				"about" => new AboutAppPlugin(),
-				"exit" => new ExitAppPlugin(),
-				"search_by_flight" => new SearchByFlightPlugin(),
-				"save_flight_info" => new SaveFlightInfoPlugin(),
-				"airport_info" => new AirportInfoPlugin(),
-				"aircraft_info" => new AircraftInfoPlugin(),
-				_ => null
-			};
+	class PluginInputReader : IUserInterfaceReader {
+		protected virtual TextReader Reader { get; }
+		protected virtual TextWriter Writer { get; }
 
-			return plugin;
+		public PluginInputReader(TextReader reader, TextWriter writer) {
+			Reader = reader;
+			Writer = writer;
 		}
-
-		public static IPlugin[] GetAvailablePlugins(GeneralApplicationSettings settings, TextReader reader, TextWriter writer) {
-
-			List<IPlugin> plugins = new List<IPlugin>(settings.AvailablePlugins.Length);
-
-			foreach (string pluginName in settings.AvailablePlugins) {
-				var plugin = SearchPluginByName(pluginName, reader, writer);
-				if (plugin is null) continue;
-
-				plugins.Add(plugin);
-			}
-
-			return plugins.ToArray();
-		}
-
-		internal static bool TryGetPluginFromInputString(string input, IPlugin[] plugins, out List<IPlugin> filteredPlugins) {
-			filteredPlugins = new List<IPlugin>();
-			input = input.ToLower();
-
-			if (string.IsNullOrEmpty(input)) return false;
-
-			if (input == "exit" || input == "quit") {
-				filteredPlugins.Add(new ExitAppPlugin());
-				return true;
-			}
-
-			for (int i = 0; i < plugins.Length; i++) {
-				bool inputIsSubstring = plugins[i].Name.ToLower().StartsWith(input);
-
-				if (inputIsSubstring) filteredPlugins.Add(plugins[i]);
-			}
-
-			return filteredPlugins.Count == 1;
-		}
-	}
-
-	abstract class InputReadablePlugin : IUserInterfaceReader {
-		protected abstract TextReader Reader { get; }
-		protected abstract TextWriter Writer { get; }
 
 		public virtual string ReadUserInput(string initialPrompt) {
 			if (!(initialPrompt is null)) {
@@ -98,7 +47,7 @@ namespace AdviPort {
 		public string Description => "Prints information about application.";
 
 		public int Invoke(object[] args) {
-			string[] paths = GeneralApplicationSettings.SearchFiles(Directory.GetCurrentDirectory(), "about.txt", 1);
+			string[] paths = GeneralApplicationSettings.SearchFiles(Directory.GetCurrentDirectory(), "about.txt", requiredFiles: 1);
 
 			if (paths is null) throw new FileNotFoundException("A required file has not been found.");
 
@@ -126,94 +75,39 @@ namespace AdviPort {
 		}
 	}
 
-	class RegisterAPIKeyPlugin : InputReadablePlugin, IPlugin {
+	class RegisterAPIKeyPlugin : IPlugin {
 		public string Name => "Register API key";
 
 		public string Description => "Registers a new user and his / her API key";
 
-		protected override TextReader Reader { get; }
+		private PluginInputReader InputReader { get; }
+		private IUserChecker UserChecker { get; }
+		private IUserProfileCreator ProfileCreator { get; }
 
-		protected override TextWriter Writer { get; }
+		public RegisterAPIKeyPlugin(PluginInputReader inputReader, IUserChecker userChecker, IUserProfileCreator profileCreator) {
+			InputReader = inputReader;
+			UserChecker = userChecker;
+			ProfileCreator = profileCreator;
+		}
 
-		public RegisterAPIKeyPlugin(TextReader reader, TextWriter writer) {
-			Reader = reader;
-			Writer = writer;
+		public RegisterAPIKeyPlugin(PluginInputReader inputReader, IUserDBHandler userHandler) {
+			InputReader = inputReader;
+			UserChecker = userHandler;
+			ProfileCreator = userHandler;
 		}
 
 		public int Invoke(object[] args) {
 
-			var userName = ReadUserInput("Please enter a name you want to register");
-			var profileFileName = $"{userName}_userprofile.apt";
+			var userName = InputReader.ReadUserInput("Please enter a name you want to register");
 
-			string profilesDir = GetProfilesDirectory();
-
-			if (profilesDir is null) { return 1; }
-
-			FileStream proFileStream = CreateNewProfile(profilesDir, profileFileName, out string profileFilePath);
-
-			if (proFileStream is null) {
-				Console.Error.WriteLine("An error ocurred while creating a new profile file for this user.");
+			if (UserChecker.UserExists(userName)) {
+				Console.Error.WriteLine($"A user with name {userName} already exists. Please choose another name.");
 				return 1;
 			}
 
-			using (proFileStream) {
-				var apiKey = ReadUserInput("Please enter the API key you want to use in the application");
+			var apiKey = InputReader.ReadUserInput("Please enter the API key you want to use in the application");
 
-				try {
-					apiKey = Encryptor.Encrypt(apiKey);
-
-					var profile = new UserProfile(apiKey);
-
-					string serializedProfile = JsonSerializer.Serialize<UserProfile>(profile);
-
-					proFileStream.Write(Encoding.UTF8.GetBytes(serializedProfile));
-				} catch {
-					// Log the error 
-					// User profile should be deleted if anything goes wrong 
-					File.Delete(profileFilePath);
-					return 1;
-				}
-
-				Console.WriteLine("Registration of a new user is successful.");
-			}
-
-			return 0;
-		}
-
-		private FileStream CreateNewProfile(string profilesDir, string fileName, out string filePath) {
-			filePath = profilesDir + Path.DirectorySeparatorChar + fileName;
-
-			if (!UsernameIsFree(profilesDir, fileName)) {
-				Console.Error.WriteLine("A user with given username already exists. Please choose another name.");
-				return null;
-			}
-
-			try {
-				var newProfileStream = File.Create(filePath);
-				return newProfileStream;
-			} catch {
-				return null;
-			}
-		}
-
-		private bool UsernameIsFree(string profileDir, string profileFileName) {
-			string[] profilePaths = GeneralApplicationSettings.SearchFiles(profileDir, profileFileName);
-
-			// If true, userprofile file with such username can be created.
-			return profilePaths is null || profilePaths.Length == 0;
-		}
-
-		private string GetProfilesDirectory() {
-
-			string[] foundProfileDirs = GeneralApplicationSettings.SearchDir(Directory.GetCurrentDirectory(), "profiles");
-			string profilesDir = foundProfileDirs[0];
-
-			if (foundProfileDirs is null) {
-				Console.Error.WriteLine("Directory with application profile could not be found. Please move \"profiles/\" directory into the project root directory.");
-				return null;
-			}
-
-			return profilesDir;
+			return ProfileCreator.CreateProfile(userName, apiKey);
 		}
 	}
 
@@ -222,9 +116,29 @@ namespace AdviPort {
 
 		public string Description => "Adds an airport into current account's bookmarks";
 
+		private PluginInputReader InputReader { get; }
+
+		private IAirportFinder AirportFinder { get; }
+
+		private IUserChecker UserChecker { get; }
+
+		public AddFavouriteAirportPlugin(PluginInputReader inputReader, IAirportFinder airportFinder, IUserChecker userChecker) {
+			InputReader = inputReader;
+			AirportFinder = airportFinder;
+			UserChecker = userChecker;
+		}
+
 		public int Invoke(object[] args) {
 
-			// Require the user to be registered
+			// TODO: Check current session - whether the user exists, is logged in.
+
+			var airportIcaoCode = InputReader.ReadUserInput("Please enter the ICAO code of your favourite airport");
+
+			AirportFinder.FindAirportByCode(airportIcaoCode);
+
+			/* if foundAirports == null -> error; can't be added as favourite airport. 
+			   check also if the airport is not already in the favourites airports. */
+
 			Console.WriteLine($"Hello From {Name}!");
 			return 0;
 		}
