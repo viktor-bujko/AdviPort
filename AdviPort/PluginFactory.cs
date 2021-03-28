@@ -9,17 +9,24 @@ namespace AdviPort {
 	internal static class PluginSelector {
 		internal static IPlugin SearchPluginByName(string pluginName, TextReader reader, TextWriter writer) {
 
-			IUserDBHandler appDatabase = new FileSystemProfileDB();
+			FileSystemProfileDB appDatabase = new FileSystemProfileDB();
 			PluginInputReader inputReader = new PluginInputReader(reader, writer);
 
 			IPlugin plugin = pluginName switch {
 				"register" => new RegisterAPIKeyPlugin(
 					inputReader,
+					appDatabase,
+					DefaultUserInputPasswordCreator.NewInstance(inputReader),
 					appDatabase
 				),
+				"login" => new LoginPlugin(
+					inputReader, 
+					appDatabase
+				),
+				"logout" => new LogoutPlugin(),
 				"add_favourite" => new AddFavouriteAirportPlugin(
 					inputReader, 
-					new AirportInfoHandling(),
+					new DefaultAirportInfoFinder(),
 					appDatabase
 				),
 				"remove_favourite" => new RemoveFavouriteAirportPlugin(),

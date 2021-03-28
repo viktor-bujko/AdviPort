@@ -201,16 +201,30 @@ namespace AdviPort {
 
 		public int Invoke(object[] args) {
 
-			// TODO: Check current session - whether the user exists, is logged in.
+			var loggedUser = Session.ActiveSession.LoggedUser;
+
+			if (loggedUser == null) {
+				Console.WriteLine("Please log in to your account first");
+				var loginExitCode = new LoginPlugin(InputReader, UserChecker)
+					.Invoke(args);
+
+				if (loginExitCode != 0) { return loginExitCode; }
+			}
+
+			// login was successful
+			loggedUser = Session.ActiveSession.LoggedUser;
+
+			if (loggedUser == null) { throw new ArgumentNullException("Logged user cannot be null"); }
 
 			var airportIcaoCode = InputReader.ReadUserInput("Please enter the ICAO code of your favourite airport");
 
+			if (loggedUser.FavouriteAirports.Contains(airportIcaoCode)) {
+				Console.WriteLine("This airport is already marked as favourite.");
+				return 0;
+			}
+
 			AirportFinder.FindAirportByCode(airportIcaoCode);
 
-			/* if foundAirports == null -> error; can't be added as favourite airport. 
-			   check also if the airport is not already in the favourites airports. */
-
-			Console.WriteLine($"Hello From {Name}!");
 			return 0;
 		}
 	}
