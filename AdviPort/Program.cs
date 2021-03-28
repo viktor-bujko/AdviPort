@@ -114,6 +114,26 @@ namespace AdviPort {
 			return filePaths;
 		}
 
+		internal static string GetProfilesDirectoryPath() {
+			string profilesPath = GeneralApplicationSettings.SearchDir(Directory.GetCurrentDirectory(), "profiles");
+
+			if (profilesPath is null) {
+				string current = Directory.GetCurrentDirectory();
+				const int PARENTS = 3;
+				for (int i = 0; i < PARENTS; i++) {
+					// Backing up from current directory PARENTS times 
+					current = Directory.GetParent(current).FullName;
+				}
+
+				profilesPath = current + Path.DirectorySeparatorChar + "profiles";
+				Directory.CreateDirectory(profilesPath);
+				Console.Error.WriteLine($"TO LOG: Created a new directory: {profilesPath}");
+				// TODO: Log the creation of given directory.
+			}
+
+			return profilesPath;
+		}
+
 		public static string SearchDir(string startDirectoryPath, string targetDirectoryName, int depth = 5) {
 			List<string> targetDirPaths = new List<string>();
 

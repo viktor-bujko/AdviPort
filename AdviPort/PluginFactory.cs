@@ -11,6 +11,7 @@ namespace AdviPort {
 		internal static IPlugin SearchPluginByName(string pluginName, TextReader reader, TextWriter writer) {
 
 			FileSystemProfileDB appDatabase = new FileSystemProfileDB();
+			FileSystemProfileDBWriter profileWriter = new FileSystemProfileDBWriter();
 			PluginInputReader inputReader = new PluginInputReader(reader, writer);
 
 			IPlugin plugin = pluginName switch {
@@ -27,10 +28,15 @@ namespace AdviPort {
 				"logout" => new LogoutPlugin(),
 				"add_favourite" => new AddFavouriteAirportPlugin(
 					inputReader, 
-					new AviationStackAirportInfoFinder(),
-					appDatabase
+					new RapidAPIAirportInfoFinder(),
+					appDatabase,
+					profileWriter
 				),
-				"remove_favourite" => new RemoveFavouriteAirportPlugin(),
+				"remove_favourite" => new RemoveFavouriteAirportPlugin(
+					inputReader,
+					appDatabase,
+					profileWriter
+				),
 				"print_schedule" => new PrintScheduleAirport(),
 				"about" => new AboutAppPlugin(),
 				"exit" => new ExitAppPlugin(),

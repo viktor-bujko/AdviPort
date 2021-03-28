@@ -54,7 +54,7 @@ namespace AdviPort.Plugins {
 
 		public int Invoke(object[] args) {
 			var userLogin = InputReader.ReadUserInput("Enter your username");
-			if (!UserChecker.UserExists(userLogin)) {
+			if (! UserChecker.UserExists(userLogin)) {
 				Console.Error.WriteLine($"User with login \"{userLogin}\" does not exists. Please register first.");
 				return 1;
 			}
@@ -79,6 +79,7 @@ namespace AdviPort.Plugins {
 				return 1;
 			}
 
+			Console.WriteLine("Login successful.");
 			Session.ActiveSession.LoggedUser = user;
 			return 0;
 		}

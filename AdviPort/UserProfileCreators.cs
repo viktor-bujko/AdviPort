@@ -10,6 +10,10 @@ namespace AdviPort {
 		int CreateProfile(string userName, string password, string apiKey);
 	}
 
+	interface IUserProfileWriter {
+		int WriteUserProfile(UserProfile profile);
+	}
+
 	interface IUserPasswordCreator {
 		string CreateUserPassword();
 	}
