@@ -26,7 +26,7 @@ namespace AdviPort {
 				"logout" => new LogoutPlugin(),
 				"add_favourite" => new AddFavouriteAirportPlugin(
 					inputReader, 
-					new DefaultAirportInfoFinder(),
+					new AviationStackAirportInfoFinder(),
 					appDatabase
 				),
 				"remove_favourite" => new RemoveFavouriteAirportPlugin(),
