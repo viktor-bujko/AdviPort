@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using AdviPort.Plugins;
 
 namespace AdviPort {
 
@@ -30,14 +31,12 @@ namespace AdviPort {
 					appDatabase
 				),
 				"remove_favourite" => new RemoveFavouriteAirportPlugin(),
-				"select_airport" => new SelectAirportPlugin(),
-				"pinpoint" => new PinpointAirportPlugin(),
 				"print_schedule" => new PrintScheduleAirport(),
 				"about" => new AboutAppPlugin(),
 				"exit" => new ExitAppPlugin(),
 				"search_by_flight" => new SearchByFlightPlugin(),
 				"save_flight_info" => new SaveFlightInfoPlugin(),
-				"airport_info" => new AirportInfoPlugin(),
+				"airport_info" => new AirportInfoPlugin(inputReader, appDatabase),
 				"aircraft_info" => new AircraftInfoPlugin(),
 				_ => null
 			};

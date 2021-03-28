@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using AdviPort.Plugins;
 
 namespace AdviPort {
 	interface IUserProfileCreator {
