@@ -10,10 +10,10 @@
 	],
 	"AvailablePlugins": [
 		"register",
+		"login",
+		"logout",
 		"add_favourite",
 		"remove_favourite",
-		"select_airport",
-		"pinpoint",
 		"print_schedule",
 		"search_by_flight",
 		"airport_info",

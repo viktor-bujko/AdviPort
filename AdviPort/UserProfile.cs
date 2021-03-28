@@ -7,93 +7,60 @@ using System.Text.Json;
 namespace AdviPort {
 	class UserProfile {
 
-		public string APIKey { get; }
+		public string APIKey { get; set; }
 
-		public string UserName { get; }
+		public string UserName { get; set; }
 
-		public List<string> FavouriteAirports { get; private set; }
+		public string Password { get; set; }
 
-		public List<string> SchedulesHistory { get; private set; }
+		public Dictionary<string, RapidAPIAirportREST> FavouriteAirports { get; set; }
 
-		public List<string> SavedFlights { get; private set; }
+		public List<string> SchedulesHistory { get; set; }
 
-		public UserProfile(string userName, string apiKey) {
+		public List<string> SavedFlights { get; set; }
+
+		public UserProfile() { }
+
+		public UserProfile(string userName, string password, string apiKey) {
 			APIKey = apiKey;
 			UserName = userName;
-			FavouriteAirports = new List<string>();
+			Password = password;
+			FavouriteAirports = new Dictionary<string, RapidAPIAirportREST>();
 			SchedulesHistory = new List<string>(10);	// 10 last successful schedule table queries should be saved into user's history
 			SavedFlights = new List<string>();
 		}
 	}
 
-	interface IUserProfileCreator {
-		int CreateProfile(string userName, string apiKey);
-	}
+	class FileSystemProfileDB : IUserChecker, IUserProfileCreator  {
 
-	interface IUserChecker {
-		bool UserExists(string userName);
-		UserProfile GetProfile(string userName);
-	}
+		private IUserProfileWriter ProfileWriter { get; }
 
-	interface IUserDBHandler : IUserChecker, IUserProfileCreator { }
-
-	class FileSystemProfileDB : IUserDBHandler  {
-
-		private string ProfilesDirectoryPath { get; }
+		private string ProfilesDirectoryPath { get; } = GeneralApplicationSettings.GetProfilesDirectoryPath();
 
 		public FileSystemProfileDB() {
-			string profilesPath = GeneralApplicationSettings.SearchDir(Directory.GetCurrentDirectory(), "profiles");
-
-			if (profilesPath is null) {
-				string current = Directory.GetCurrentDirectory();
-				const int PARENTS = 3;
-				for (int i = 0; i < PARENTS; i++) {
-					// Backing up from current directory PARENTS times 
-					current = Directory.GetParent(current).FullName;
-				}
-
-				profilesPath = current + Path.DirectorySeparatorChar + "profiles";
-				Directory.CreateDirectory(profilesPath);
-				Console.Error.WriteLine($"TO LOG: Created a new directory: {profilesPath}");
-				// TODO: Log the creation of given directory.
-			}
-
-			ProfilesDirectoryPath = profilesPath;
+			ProfileWriter = new FileSystemProfileDBWriter();
 		}
 
-		public int CreateProfile(string userName, string apiKey) {
+		public int CreateProfile(string userName, string password, string apiKey) {
 
 			apiKey = Encryptor.Encrypt(apiKey);
+			password = Encryptor.Encrypt(password);
 
 			if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(apiKey)) {
 				Console.Error.WriteLine("The username nor API key cannot be an empty string.");
 				return 1;
 			}
 
-			var writer = CreateProfileFile(userName);
+			if (password == null) { return 1; }
 
-			if (writer is null) { return 1; }
+			var userProfile = new UserProfile(userName, password, apiKey);
 
-			using (writer) {
-				try {
-					var profile = new UserProfile(userName, apiKey);
-					var options = new JsonSerializerOptions() {
-						WriteIndented = true
-					};
-
-					string serializedProfile = JsonSerializer.Serialize<UserProfile>(profile, options);
-
-					writer.Write(serializedProfile);
-					Console.WriteLine("Registration of a new user is successful.");
-				} catch {
-					// Log the error 
-					// User profile should be deleted if anything goes wrong 
-					File.Delete(GetProfileFilePath(userName));
-					return 1;
-				}
+			int writeExitCode = ProfileWriter.WriteUserProfile(userProfile);
+			if (writeExitCode == 0) {
+				Console.WriteLine("Registration of a new user is successful.");
 			}
 
-			return 0;
+			return writeExitCode;
 		}
 
 		public UserProfile GetProfile(string userName) {
@@ -106,7 +73,9 @@ namespace AdviPort {
 
 			using var profileReader = GeneralApplicationSettings.GetTextReader(profiles);
 
-			var profile = JsonSerializer.Deserialize<UserProfile>(profileReader.ReadToEnd(), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+			string content = profileReader.ReadToEnd();
+
+			var profile = JsonSerializer.Deserialize<UserProfile>(content, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
 			return profile;
 		}
@@ -124,17 +93,51 @@ namespace AdviPort {
 		}
 
 		private string GetProfileFileName(string userName) => $"{userName}_userprofile.apt";
+	}
 
-		private string GetProfileFilePath(string userName) => ProfilesDirectoryPath + Path.DirectorySeparatorChar + GetProfileFileName(userName);
+	class FileSystemProfileDBWriter : IUserProfileWriter {
 
-		private TextWriter CreateProfileFile(string userName) {
+		private string ProfilesDirectoryPath { get; }
+
+		private TextWriter FileWriter { get; set; }
+
+		public FileSystemProfileDBWriter() {
+			ProfilesDirectoryPath = GeneralApplicationSettings.GetProfilesDirectoryPath();
+		}
+
+		public int WriteUserProfile(UserProfile profile) {
+
 			try {
-				TextWriter writer = new StreamWriter(GetProfileFilePath(userName));
-				return writer;
+				FileWriter = new StreamWriter(GetProfileFilePath(profile.UserName));
 			} catch {
 				Console.Error.WriteLine("Profile file for this user could not be created.");
-				return null;
+				return 1;
 			}
+
+			if (FileWriter is null) { return 1; }
+
+			using (FileWriter) {
+				try {
+					var options = new JsonSerializerOptions() {
+						WriteIndented = true
+					};
+
+					string serializedProfile = JsonSerializer.Serialize<UserProfile>(profile, options);
+
+					FileWriter.Write(serializedProfile);
+				} catch {
+					// Log the error 
+					// User profile should be deleted if anything goes wrong 
+					File.Delete(GetProfileFilePath(profile.UserName));
+					return 1;
+				}
+			}
+
+			Console.WriteLine("Changes written successfully.");
+			return 0;
 		}
+		private string GetProfileFilePath(string userName) => ProfilesDirectoryPath + Path.DirectorySeparatorChar + GetProfileFileName(userName);
+
+		private string GetProfileFileName(string userName) => $"{userName}_userprofile.apt";
 	}
 }

@@ -16,8 +16,9 @@
     </None>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="XCOPY &quot;$(SolutionDir)\AdviPort\decorations\&quot; &quot;$(TargetDir)\decorations\&quot; /S" />
-  </Target>
+  <ItemGroup>
+    <Folder Include="profiles\" />
+  </ItemGroup>
 
+ 
 </Project>
