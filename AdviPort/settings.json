@@ -10,6 +10,8 @@
 	],
 	"AvailablePlugins": [
 		"register",
+		"login",
+		"logout",
 		"add_favourite",
 		"remove_favourite",
 		"select_airport",

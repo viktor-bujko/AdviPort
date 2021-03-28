@@ -11,33 +11,25 @@ namespace AdviPort {
 
 		public string UserName { get; }
 
+		public string Password { get; }
+
 		public List<string> FavouriteAirports { get; private set; }
 
 		public List<string> SchedulesHistory { get; private set; }
 
 		public List<string> SavedFlights { get; private set; }
 
-		public UserProfile(string userName, string apiKey) {
+		public UserProfile(string userName, string password, string apiKey) {
 			APIKey = apiKey;
 			UserName = userName;
+			Password = password;
 			FavouriteAirports = new List<string>();
 			SchedulesHistory = new List<string>(10);	// 10 last successful schedule table queries should be saved into user's history
 			SavedFlights = new List<string>();
 		}
 	}
 
-	interface IUserProfileCreator {
-		int CreateProfile(string userName, string apiKey);
-	}
-
-	interface IUserChecker {
-		bool UserExists(string userName);
-		UserProfile GetProfile(string userName);
-	}
-
-	interface IUserDBHandler : IUserChecker, IUserProfileCreator { }
-
-	class FileSystemProfileDB : IUserDBHandler  {
+	class FileSystemProfileDB : IUserChecker, IUserProfileCreator  {
 
 		private string ProfilesDirectoryPath { get; }
 
@@ -61,14 +53,17 @@ namespace AdviPort {
 			ProfilesDirectoryPath = profilesPath;
 		}
 
-		public int CreateProfile(string userName, string apiKey) {
+		public int CreateProfile(string userName, string password, string apiKey) {
 
 			apiKey = Encryptor.Encrypt(apiKey);
+			password = Encryptor.Encrypt(password);
 
 			if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(apiKey)) {
 				Console.Error.WriteLine("The username nor API key cannot be an empty string.");
 				return 1;
 			}
+
+			if (password == null) { return 1; }
 
 			var writer = CreateProfileFile(userName);
 
@@ -76,7 +71,7 @@ namespace AdviPort {
 
 			using (writer) {
 				try {
-					var profile = new UserProfile(userName, apiKey);
+					var profile = new UserProfile(userName, password, apiKey);
 					var options = new JsonSerializerOptions() {
 						WriteIndented = true
 					};

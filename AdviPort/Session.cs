@@ -5,6 +5,9 @@ using System.Text;
 namespace AdviPort {
 	class Session {
 		private static Session active;
+		private UserProfile loggedUser;
+		private DateTime loginDate;
+
 		public static Session ActiveSession {
 			get {
 				if (active is null) {
@@ -15,8 +18,16 @@ namespace AdviPort {
 			}
 		}
 
+		public UserProfile LoggedUser {
+			get => loggedUser; 
+			set {
+				loggedUser = value;
+				loginDate = DateTime.Now;
+			}
+		}
 
-
-		private Session() { }
+		private Session() {
+			LoggedUser = null;
+		}
 	}
 }

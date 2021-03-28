@@ -82,18 +82,22 @@ namespace AdviPort {
 
 		private PluginInputReader InputReader { get; }
 		private IUserChecker UserChecker { get; }
+
+		private IUserPasswordCreator PasswordCreator { get; }
 		private IUserProfileCreator ProfileCreator { get; }
 
-		public RegisterAPIKeyPlugin(PluginInputReader inputReader, IUserChecker userChecker, IUserProfileCreator profileCreator) {
+		public RegisterAPIKeyPlugin(PluginInputReader inputReader, IUserChecker userChecker, IUserPasswordCreator passwordCreator, IUserProfileCreator profileCreator) {
 			InputReader = inputReader;
 			UserChecker = userChecker;
+			PasswordCreator = passwordCreator;
 			ProfileCreator = profileCreator;
 		}
 
-		public RegisterAPIKeyPlugin(PluginInputReader inputReader, IUserDBHandler userHandler) {
+		public RegisterAPIKeyPlugin(PluginInputReader inputReader, IUserDBHandler userDBHandler) {
 			InputReader = inputReader;
-			UserChecker = userHandler;
-			ProfileCreator = userHandler;
+			UserChecker = userDBHandler;
+			PasswordCreator = userDBHandler;
+			ProfileCreator = userDBHandler;
 		}
 
 		public int Invoke(object[] args) {
@@ -105,9 +109,76 @@ namespace AdviPort {
 				return 1;
 			}
 
+			var passwd = PasswordCreator.CreateUserPassword();
+
 			var apiKey = InputReader.ReadUserInput("Please enter the API key you want to use in the application");
 
-			return ProfileCreator.CreateProfile(userName, apiKey);
+			return ProfileCreator.CreateProfile(userName, passwd, apiKey);
+		}
+	}
+
+	class LoginPlugin : IPlugin {
+		public string Name => "Login to the application";
+
+		public string Description => "Logs in as user";
+
+		private PluginInputReader InputReader { get; }
+
+		private IUserChecker UserChecker { get; }
+
+		public LoginPlugin(PluginInputReader inputReader, IUserChecker userChecker) {
+			InputReader = inputReader;
+			UserChecker = userChecker;
+		}
+
+		public int Invoke(object[] args) {
+			var userLogin = InputReader.ReadUserInput("Enter your username");
+			if (! UserChecker.UserExists(userLogin)) {
+				Console.Error.WriteLine($"User with login \"{userLogin}\" does not exists. Please register first.");
+				return 1;
+			}
+
+			var user = UserChecker.GetProfile(userLogin);
+			int passwordAttempts = 5;
+			bool loginSuccess;
+			bool tryAnotherAttempt;
+
+			do {
+				var userPasswd = InputReader.ReadUserInput($"Enter your password ({passwordAttempts} attempts left)");
+				userPasswd = Encryptor.Encrypt(userPasswd);
+
+				loginSuccess = user.Password == userPasswd;
+
+				tryAnotherAttempt = passwordAttempts-- > 0 && ! loginSuccess;
+
+			} while (tryAnotherAttempt);
+
+			if (! loginSuccess) {
+				Console.Error.WriteLine("Too many incorrect attempts. Please try again.");
+				return 1;
+			}
+
+			Session.ActiveSession.LoggedUser = user;
+			return 0;
+		}
+	}
+
+	class LogoutPlugin : IPlugin {
+		public string Name => "Log out";
+
+		public string Description => "Logs out the current user.";
+
+		public int Invoke(object[] args) {
+			var loggedUser = Session.ActiveSession.LoggedUser;
+
+			if (loggedUser != null) {
+				Session.ActiveSession.LoggedUser = null;
+				Console.WriteLine("Logged out successfully.");
+			} else {
+				Console.WriteLine("Already logged out.");
+			}
+
+			return 0;
 		}
 	}
 
