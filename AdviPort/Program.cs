@@ -10,10 +10,6 @@ namespace AdviPort {
 	class Program {
 		static void Main(string[] args) {
 
-			// TODO: Support možnosti kedy správanie aplikácie nebude interaktívne
-			// teda vedieť dopísať správanie programu, kedy sa spracuje nejaký
-			// cmdline príkaz a podľa neho sa postaví query
-
 			var reader = Console.In;
 			var writer = Console.Out;
 			bool exit = false;
