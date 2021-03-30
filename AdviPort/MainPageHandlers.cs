@@ -45,22 +45,27 @@ namespace AdviPort {
 	abstract class MainPageHandlerSelector {
 		public static IMainPageHandler SelectMainPageHandler(GeneralApplicationSettings settings, TextReader reader, TextWriter writer) {
 
-			IMainPageHandler handler = settings.MainPageStyle switch {
+			CommonMainPageHandler handler = settings.MainPageStyle switch {
 				"" => ClassicMainPageHandler.NewInstance(reader, writer),
 				"classic" => ClassicMainPageHandler.NewInstance(reader, writer),
 				"decorative" => DecorativeMainPageHandler.NewInstance(reader, writer),
-				"descriptive" => DescriptiveMainPageHandler.NewInstance(reader, writer, false),
-				"decorative/descriptive" => DescriptiveMainPageHandler.NewInstance(reader, writer, true),
-				"descriptive/decorative" => DescriptiveMainPageHandler.NewInstance(reader, writer, true),
+				"descriptive" => DescriptiveMainPageHandler.NewInstance(ClassicMainPageHandler.NewInstance(reader, writer)),
+				"decorative/descriptive" => DescriptiveMainPageHandler.NewInstance(DecorativeMainPageHandler.NewInstance(reader, writer)),
+				"descriptive/decorative" => DescriptiveMainPageHandler.NewInstance(DecorativeMainPageHandler.NewInstance(reader, writer)),
 				_ => null,
 			};
 
-			if (handler is null) {
+			if (handler == null) {
 				Console.Error.WriteLine("Unsupported main page printer.");
 				handler = ClassicMainPageHandler.NewInstance(reader, writer);
 			}
 
-			return handler;
+			var loggedUser = Session.ActiveSession.LoggedUser;
+
+			if (loggedUser == null)
+				return handler;
+			else
+				return ShowLoggedUserMainPageHandler.NewInstance(handler);
 		}
 	}
 
@@ -337,5 +342,48 @@ ________________________________________________________________________________
 		public override void PrintContentFooterSeparator(int maxPrinted) {
 			BaseMainPageHandler.PrintContentFooterSeparator(maxPrinted);
 		}
+	}
+
+	class ShowLoggedUserMainPageHandler : CommonMainPageHandler {
+
+		private static ShowLoggedUserMainPageHandler Instance { get; set; }
+		private CommonMainPageHandler BaseHandler { get; }
+
+		private ShowLoggedUserMainPageHandler(CommonMainPageHandler baseHandler) : base(baseHandler.Reader, baseHandler.Writer) {
+			BaseHandler = baseHandler;
+		}
+
+		public override string MainPageHeader => BaseHandler.MainPageHeader;
+
+		public static ShowLoggedUserMainPageHandler NewInstance(CommonMainPageHandler baseHandler) {
+			if (Instance == null || Instance.BaseHandler != baseHandler) {
+				Instance = new ShowLoggedUserMainPageHandler(baseHandler);
+			}
+
+			return Instance;
+		}
+
+		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
+
+			var loggedUser = Session.ActiveSession.LoggedUser;
+
+			if (loggedUser == null) throw new ArgumentException("This main page handler should not be used without logged user.");
+
+			Writer.WriteLine(MainPageHeader);
+
+			Writer.WriteLine($"Welcome back, {loggedUser.UserName}\n");
+
+			Plugins = PluginSelector.GetAvailablePlugins(settings, Reader, Writer);
+
+			if (Plugins.Contains(LoginPlugin.Instance)) {
+				Plugins.Remove(LoginPlugin.Instance);
+			}
+
+			PrintAvailablePlugins();
+		}
+
+		public override int PrintMainPagePluginOption(IPlugin plugin, int orderNumber) => BaseHandler.PrintMainPagePluginOption(plugin, orderNumber);
+
+		public override void PrintContentFooterSeparator(int maxPrinted) => BaseHandler.PrintContentFooterSeparator(maxPrinted);
 	}
 }
