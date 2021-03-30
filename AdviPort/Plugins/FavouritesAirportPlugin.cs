@@ -1,55 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 
 namespace AdviPort.Plugins {
 
-	abstract class LoggedAirportPlugin {
-		protected PluginInputReader InputReader { get; }
-		protected IUserChecker UserChecker { get; }
-		protected IUserProfileWriter ProfileWriter { get; }
-
-		protected LoggedAirportPlugin(PluginInputReader inputReader, IUserChecker userChecker, IUserProfileWriter profileWriter) {
-			InputReader = inputReader;
-			UserChecker = userChecker;
-			ProfileWriter = profileWriter;
-		}
-
-		protected UserProfile LogInAUser() {
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser == null) {
-				Console.WriteLine("Please log in to your account first");
-				var loginExitCode = new LoginPlugin(InputReader, UserChecker)
-					.Invoke(null);
-
-				if (loginExitCode != 0) { return null; }
-				Thread.Sleep(500);
-			}
-
-			// login was successful
-			Console.Clear();
-			loggedUser = Session.ActiveSession.LoggedUser;
-
-			return loggedUser;
-		}
-	}
-
-	class AddFavouriteAirportPlugin : LoggedAirportPlugin, IPlugin {
+	class AddFavouriteAirportPlugin : IPlugin {
 		public string Name => "Add a favourite airport";
 
 		public string Description => "Adds an airport into current account's bookmarks";
-
+		protected PluginInputReader InputReader { get; }
+		protected IUserChecker UserChecker { get; }
+		protected IUserProfileWriter ProfileWriter { get; }
 		private IAirportFinder AirportFinder { get; }
+		private ILoginHandler LoginHandler { get; }
 
-		public AddFavouriteAirportPlugin(PluginInputReader inputReader, IAirportFinder airportFinder, IUserChecker userChecker, IUserProfileWriter profileWriter) : base(inputReader, userChecker, profileWriter) {
+		public AddFavouriteAirportPlugin(PluginInputReader inputReader, IAirportFinder airportFinder, IUserChecker userChecker, IUserProfileWriter profileWriter) {
 			AirportFinder = airportFinder;
+			InputReader = inputReader;
+			UserChecker = userChecker;
+			ProfileWriter = profileWriter;
+			LoginHandler = LoginPlugin.GetInstance(InputReader, UserChecker);
 		}
 
 		public int Invoke(object[] args) {
 
-			var loggedUser = LogInAUser();
+			var loggedUser = LoginHandler.LogIn();
 
 			if (loggedUser == null) { return 1; }
 
@@ -68,17 +43,25 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class RemoveFavouriteAirportPlugin : LoggedAirportPlugin, IPlugin {
+	class RemoveFavouriteAirportPlugin : IPlugin {
 		public string Name => "Remove a favourite airport";
 
 		public string Description => "Removes an airport from current account's bookmarks";
+		protected PluginInputReader InputReader { get; }
+		protected IUserChecker UserChecker { get; }
+		protected IUserProfileWriter ProfileWriter { get; }
+		private ILoginHandler LoginHandler { get; }
 
-		public RemoveFavouriteAirportPlugin(PluginInputReader inputReader, IUserChecker userChecker, IUserProfileWriter profileWriter) : base(inputReader, userChecker, profileWriter) {
+		public RemoveFavouriteAirportPlugin(PluginInputReader inputReader, IUserChecker userChecker, IUserProfileWriter profileWriter) {
+			InputReader = inputReader;
+			UserChecker = userChecker;
+			ProfileWriter = profileWriter;
+			LoginHandler = LoginPlugin.GetInstance(InputReader, UserChecker);
 		}
 
 		public int Invoke(object[] args) {
 
-			var loggedUser = LogInAUser();
+			var loggedUser = LoginHandler.LogIn();
 
 			if (loggedUser == null) { return 1; }
 

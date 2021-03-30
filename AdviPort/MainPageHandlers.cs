@@ -68,11 +68,11 @@ namespace AdviPort {
 
 		public abstract string MainPageHeader { get; }
 
-		public abstract TextReader Reader { get; }
+		public virtual TextReader Reader { get; }
 
-		public abstract TextWriter Writer { get; }
+		public virtual TextWriter Writer { get; }
 
-		protected abstract IPlugin[] Plugins { get; set; }
+		protected virtual IList<IPlugin> Plugins { get; set; }
 
 		public abstract void PrintMainPageContent(GeneralApplicationSettings settings);
 
@@ -138,6 +138,11 @@ namespace AdviPort {
 
 			return null;
 		}
+
+		protected CommonMainPageHandler(TextReader reader, TextWriter writer) {
+			Reader = reader;
+			Writer = writer;
+		}
 	}
 
 	class ClassicMainPageHandler : CommonMainPageHandler {
@@ -155,19 +160,13 @@ namespace AdviPort {
 ______________________________________________________________
 ";
 
-		protected override IPlugin[] Plugins { get; set; }
+		//protected virtual IPlugin[] Plugins { get; set; }
 
-		public override TextReader Reader { get; }
-
-		public override TextWriter Writer { get; }
-
-		private ClassicMainPageHandler(TextReader reader, TextWriter writer) {
-			Reader = reader;
-			Writer = writer;
-		}
+		private ClassicMainPageHandler(TextReader reader, TextWriter writer) : base(reader, writer) { }
 
 		public static ClassicMainPageHandler NewInstance(TextReader reader, TextWriter writer) {
-			if (Instance is null) {
+			if (Instance is null || Instance.Reader != reader || Instance.Writer != writer) {
+				// Creating new instance only if it does not exist yet or if the conditions change
 				Instance = new ClassicMainPageHandler(reader, writer);
 			}
 
@@ -218,22 +217,17 @@ ______________________________________________________________
 ______________________________________________________________________________________________________________
 ";
 
-		protected override IPlugin[] Plugins { get; set; }
+		//protected override IPlugin[] Plugins { get; set; }
 
-		public override TextReader Reader { get; }
-		public override TextWriter Writer { get; }
-
-		private DecorativeMainPageHandler(TextReader reader, TextWriter writer) {
-			Reader = reader;
-			Writer = writer;
+		private DecorativeMainPageHandler(TextReader reader, TextWriter writer) : base(reader, writer) {
 			freeSpaces = 70;
-			//decorations = PageDecoration.GetPageDecorations(@"..\..\..\decorations");
 			sideDecoration = new PageDecoration(@"..\..\..\decorations\tower_decoration.txt");
 			planeDecoration = new PageDecoration(@"..\..\..\decorations\airplane_decoration.txt");
 		}
 
 		public static DecorativeMainPageHandler NewInstance(TextReader reader, TextWriter writer) {
-			if (Instance is null) {
+			if (Instance is null || Instance.Reader != reader || Instance.Writer != writer) {
+				// Creating new instance only if it does not exist yet or if the conditions change
 				Instance = new DecorativeMainPageHandler(reader, writer);
 			}
 
@@ -302,27 +296,17 @@ ________________________________________________________________________________
 
 		private CommonMainPageHandler BaseMainPageHandler { get; }
 
-		protected override IPlugin[] Plugins { get; set; }
-
-		public override TextReader Reader { get; }
-
-		public override TextWriter Writer { get; }
+		protected override IList<IPlugin> Plugins { get; set; }
 
 		public override string MainPageHeader => BaseMainPageHandler.MainPageHeader;
 
-		private DescriptiveMainPageHandler(CommonMainPageHandler baseHandler) {
+		private DescriptiveMainPageHandler(CommonMainPageHandler baseHandler) : base(baseHandler.Reader, baseHandler.Writer) {
 			BaseMainPageHandler = baseHandler;
-			Reader = BaseMainPageHandler.Reader;
-			Writer = BaseMainPageHandler.Writer;
 		}
 
-		public static DescriptiveMainPageHandler NewInstance(TextReader reader, TextWriter writer, bool isDecorativeHandler) {
-			if (Instance is null) {
-				if (isDecorativeHandler) {
-					Instance = new DescriptiveMainPageHandler(DecorativeMainPageHandler.NewInstance(reader, writer));
-				} else {
-					Instance = new DescriptiveMainPageHandler(ClassicMainPageHandler.NewInstance(reader, writer));
-				}
+		public static DescriptiveMainPageHandler NewInstance(CommonMainPageHandler baseHandler) {
+			if (Instance == null) {
+				Instance = new DescriptiveMainPageHandler(baseHandler);
 			}
 
 			return Instance;

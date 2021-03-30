@@ -39,18 +39,54 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class LoginPlugin : IPlugin {
+	interface ILoginHandler {
+		public UserProfile LogIn();
+	}
+
+	class LoginPlugin : ILoginHandler, IPlugin {
 		public string Name => "Login to the application";
+
+		public static LoginPlugin Instance { get; private set; }
 
 		public string Description => "Logs in as user";
 
-		private PluginInputReader InputReader { get; }
+		private IUserInterfaceReader InputReader { get; }
 
 		private IUserChecker UserChecker { get; }
 
-		public LoginPlugin(PluginInputReader inputReader, IUserChecker userChecker) {
+		private LoginPlugin(IUserInterfaceReader inputReader, IUserChecker userChecker) {
 			InputReader = inputReader;
 			UserChecker = userChecker;
+		}
+
+		public static LoginPlugin GetInstance(IUserInterfaceReader inputReader, IUserChecker userChecker) {
+			if (Instance == null || 
+				Instance.InputReader != inputReader || 
+				Instance.UserChecker != userChecker
+				) {
+				// Creating new instance only if it does not exist yet or if the conditions change
+				Instance = new LoginPlugin(inputReader, userChecker);
+			}
+
+			return Instance;
+		}
+
+		UserProfile ILoginHandler.LogIn() {
+			var loggedUser = Session.ActiveSession.LoggedUser;
+
+			if (loggedUser == null) {
+				Console.WriteLine("Please log in to your account first");
+				var loginExitCode = Invoke(null);
+
+				if (loginExitCode != 0) { return null; }
+				Thread.Sleep(500);
+			}
+
+			// login was successful
+			Console.Clear();
+			loggedUser = Session.ActiveSession.LoggedUser;
+
+			return loggedUser;
 		}
 
 		public int Invoke(object[] args) {
@@ -136,8 +172,6 @@ namespace AdviPort.Plugins {
 			} else {
 				Console.WriteLine("Already logged out.");
 			}
-
-			return 0;
 		}
 	}
 }
