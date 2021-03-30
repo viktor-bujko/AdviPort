@@ -60,9 +60,7 @@ namespace AdviPort {
 				handler = ClassicMainPageHandler.NewInstance(reader, writer);
 			}
 
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser == null)
+			if (! Session.ActiveSession.HasLoggedUser)
 				return handler;
 			else
 				return ShowLoggedUserMainPageHandler.NewInstance(handler);
@@ -365,12 +363,11 @@ ________________________________________________________________________________
 
 		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
 
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser == null) throw new ArgumentException("This main page handler should not be used without logged user.");
+			if (! Session.ActiveSession.HasLoggedUser) throw new ArgumentException("This main page handler should not be used without logged user.");
 
 			Writer.WriteLine(MainPageHeader);
 
+			var loggedUser = Session.ActiveSession.LoggedUser;
 			Writer.WriteLine($"Welcome back, {loggedUser.UserName}\n");
 
 			Plugins = PluginSelector.GetAvailablePlugins(settings, Reader, Writer);

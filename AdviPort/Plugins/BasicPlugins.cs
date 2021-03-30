@@ -72,9 +72,8 @@ namespace AdviPort.Plugins {
 		}
 
 		UserProfile ILoginHandler.LogIn() {
-			var loggedUser = Session.ActiveSession.LoggedUser;
 
-			if (loggedUser == null) {
+			if (! Session.ActiveSession.HasLoggedUser) {
 				Console.WriteLine("Please log in to your account first");
 				var loginExitCode = Invoke(null);
 
@@ -84,9 +83,7 @@ namespace AdviPort.Plugins {
 
 			// login was successful
 			Console.Clear();
-			loggedUser = Session.ActiveSession.LoggedUser;
-
-			return loggedUser;
+			return Session.ActiveSession.LoggedUser;
 		}
 
 		public int Invoke(object[] args) {
@@ -164,9 +161,7 @@ namespace AdviPort.Plugins {
 		}
 
 		void ILogoutHandler.LogOut() {
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser != null) {
+			if (Session.ActiveSession.HasLoggedUser) {
 				Session.ActiveSession.LoggedUser = null;
 				Console.WriteLine("Logged out successfully.");
 			} else {

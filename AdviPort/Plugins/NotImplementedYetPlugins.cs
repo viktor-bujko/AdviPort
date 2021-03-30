@@ -51,9 +51,8 @@ namespace AdviPort.Plugins {
 		}
 
 		public int Invoke(object[] args) {
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser == null) {
+			
+			if (! Session.ActiveSession.HasLoggedUser) {
 				Console.WriteLine("Please log in to your account first");
 				var loginExitCode = LoginPlugin.GetInstance(InputReader, UserChecker).Invoke(args);
 

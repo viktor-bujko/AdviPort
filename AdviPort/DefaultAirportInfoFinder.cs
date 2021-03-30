@@ -22,9 +22,7 @@ namespace AdviPort {
 	class AviationStackAirportInfoFinder : IAirportFinder {
 		protected string APIEndpoint { get; } = "airports";
 		public void SetFavouriteAirportByICAO(string airportIcaoCode, IUserProfileWriter profileWriter) {
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser == null) {
+			if (! Session.ActiveSession.HasLoggedUser) {
 				Console.Error.WriteLine("You have to log in first before using application services.");
 				throw new ArgumentNullException();
 			}
@@ -92,12 +90,11 @@ namespace AdviPort {
 		protected string APIEndpoint { get; } = "airport";
 
 		public async void SetFavouriteAirportByICAO(string airportIcaoCode, IUserProfileWriter profileWriter) {
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser == null) {
+			if (! Session.ActiveSession.HasLoggedUser) {
 				throw new ArgumentNullException("A user has to be logged in order to use this method.");
 			}
 
+			var loggedUser = Session.ActiveSession.LoggedUser;
 			string apiKey = Encryptor.Decrypt(loggedUser.APIKey);
 
 			var uri = new Uri($"{ RootURI }/{ APIEndpoint }?icao={ airportIcaoCode.ToLower() }");
