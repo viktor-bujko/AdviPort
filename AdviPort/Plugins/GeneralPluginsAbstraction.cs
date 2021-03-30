@@ -13,6 +13,10 @@ namespace AdviPort.Plugins {
 		string Description { get; }
 	}
 
+	interface ILoggedInOnlyPlugin : IPlugin { }
+
+	interface ILoggedOffPlugin : IPlugin { }
+
 	class PluginInputReader : IUserInterfaceReader {
 		protected virtual TextReader Reader { get; }
 		protected virtual TextWriter Writer { get; }

@@ -58,6 +58,9 @@ namespace AdviPort {
 				var plugin = SearchPluginByName(pluginName, reader, writer);
 				if (plugin is null) continue;
 
+				if (!Session.ActiveSession.HasLoggedUser && plugin is ILoggedInOnlyPlugin) continue;
+				if (Session.ActiveSession.HasLoggedUser && plugin is ILoggedOffPlugin) continue;
+
 				plugins.Add(plugin);
 			}
 
@@ -76,9 +79,11 @@ namespace AdviPort {
 			}
 
 			for (int i = 0; i < plugins.Count; i++) {
-				bool inputIsSubstring = plugins[i].Name.ToLower().StartsWith(input);
 
-				if (inputIsSubstring) filteredPlugins.Add(plugins[i]);
+				string pluginNameFirstWord = plugins[i].Name.Split()[0].ToLower();
+				bool matchesFirstWord = pluginNameFirstWord == input;
+
+				if (matchesFirstWord) filteredPlugins.Add(plugins[i]);
 			}
 
 			return filteredPlugins.Count == 1;

@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading;
 
 namespace AdviPort.Plugins {
-	class AboutAppPlugin : IPlugin {
+
+	class AboutAppPlugin : ILoggedInOnlyPlugin, ILoggedOffPlugin {
 		public string Name => "About Application";
 
 		public string Description => "Prints information about application.";
@@ -28,7 +29,7 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class ExitAppPlugin : IPlugin {
+	class ExitAppPlugin : ILoggedInOnlyPlugin, ILoggedOffPlugin {
 		public string Name => "Exit Application";
 
 		public string Description => "Quits the application";
@@ -43,7 +44,7 @@ namespace AdviPort.Plugins {
 		public UserProfile LogIn();
 	}
 
-	class LoginPlugin : ILoginHandler, IPlugin {
+	class LoginPlugin : ILoginHandler, ILoggedOffPlugin {
 		public string Name => "Login to the application";
 
 		public static LoginPlugin Instance { get; private set; }
@@ -149,7 +150,7 @@ namespace AdviPort.Plugins {
 		void LogOut();
 	}
 
-	class LogoutPlugin : ILogoutHandler, IPlugin {
+	class LogoutPlugin : ILogoutHandler, ILoggedInOnlyPlugin {
 		public string Name => "Log out";
 
 		public string Description => "Logs out the current user.";

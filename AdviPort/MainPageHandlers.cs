@@ -133,7 +133,7 @@ namespace AdviPort {
 			}
 
 			if (filteredPlugins.Count == 0) {
-				Console.Error.Write("No corresponding plugin has been found. Please try again.");
+				Console.Error.Write("No corresponding plugin has been found. Please type the order number or entire first word of the plugin.");
 			} else {
 				Console.Error.Write($"{filteredPlugins.Count} matching plugins has been found. Please specify an exact number of the plugin.");
 				Plugins = filteredPlugins.ToArray();
