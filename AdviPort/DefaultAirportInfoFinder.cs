@@ -123,27 +123,13 @@ namespace AdviPort {
 			Console.WriteLine($"Got successful response for airport \"{ airportIcaoCode }\"");
 			//var body = response.Content.ReadAsStringAsync(); 
 			var body = "{\"id\":1213,\"iata\":\"CDG\",\"icao\":\"LFPG\",\"name\":\"Charles de Gaulle Airport (Roissy Airport)\",\"location\":\"Paris, Île-de-France, France\",\"street_number\":\"\",\"street\":\"\",\"city\":\"Roissy-en-France\",\"county\":\"\",\"state\":\"Île-de-France\",\"country_iso\":\"FR\",\"country\":\"France\",\"postal_code\":\"95700\",\"phone\":\"+33 1 70 36 39 50\",\"latitude\":49.00969,\"longitude\":2.5479245,\"uct\":120,\"website\":\"http://www.parisaeroport.fr/\"}\n";
-			var airportObject = JsonSerializer.Deserialize<RapidAPIAirportREST>(body, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+			body = "{\"icao\": \"EDDF\", \"iata\": \"FRA\", \"shortName\": \"Frankfurt-am-Main\", \"fullName\": \"Frankfurt-am-Main\", \"municipalityName\": \"Frankfurt-am-Main\", \"location\": { \"lat\": 50.0264, \"lon\": 8.543129}, \"country\": { \"code\": \"DE\", \"name\": \"Germany\"}, \"continent\": { \"code\": \"EU\", \"name\": \"Europe\" }, \"timeZone\": \"Europe/Berlin\", \"urls\": { \"WebSite\": \"http://www.frankfurt-airport.de/ \", \"Wikipedia\": \"https://en.wikipedia.org/wiki/Frankfurt_Airport \", \"Twitter\": \"http://twitter.com/Airport_FRA \", \"GoogleMaps\": \"https://www.google.com/maps/@50.026401,8.543129,14z \", \"FlightRadar\": \"https://www.flightradar24.com/50.03,8.54/14 \" } }";
+			var airportObject = JsonSerializer.Deserialize<ResponseObjects.Airport>(body, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 
-			loggedUser.FavouriteAirports.Add(airportObject.ICAO.ToLower(), airportObject);
+			loggedUser.FavouriteAirports.Add(airportObject.ICAO.ToLower() + "a", airportObject);
 
 			profileWriter.WriteUserProfile(loggedUser);
 		}
-	}
-
-	class RapidAPIAirportREST {
-		public string IATA { get; set; }
-		public string ICAO { get; set; }
-		public string Name { get; set; }
-		public string Location { get; set; }
-		public string City { get; set; }
-		public string State { get; set; }
-		public string Country_ISO { get; set; }
-		public string Country { get; set; }
-		public string Phone { get; set; }
-		public double Latitude { get; set; }
-		public double Longitude { get; set; }
-		public string Website { get; set; }
 	}
 
 	#endregion

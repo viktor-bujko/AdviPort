@@ -13,7 +13,7 @@ namespace AdviPort {
 
 		public string Password { get; set; }
 
-		public Dictionary<string, RapidAPIAirportREST> FavouriteAirports { get; set; }
+		public Dictionary<string, ResponseObjects.Airport> FavouriteAirports { get; set; }
 
 		public List<string> SchedulesHistory { get; set; }
 
@@ -25,7 +25,7 @@ namespace AdviPort {
 			APIKey = apiKey;
 			UserName = userName;
 			Password = password;
-			FavouriteAirports = new Dictionary<string, RapidAPIAirportREST>();
+			FavouriteAirports = new Dictionary<string, ResponseObjects.Airport>();
 			SchedulesHistory = new List<string>(10);	// 10 last successful schedule table queries should be saved into user's history
 			SavedFlights = new List<string>();
 		}
