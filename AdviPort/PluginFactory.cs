@@ -18,10 +18,10 @@ namespace AdviPort {
 				"register" => new RegisterAPIKeyPlugin(
 					inputReader,
 					appDatabase,
-					DefaultUserInputPasswordCreator.NewInstance(inputReader),
+					DefaultUserInputPasswordCreator.GetInstance(inputReader),
 					appDatabase
 				),
-				"login" => new LoginPlugin(
+				"login" => LoginPlugin.GetInstance(
 					inputReader, 
 					appDatabase
 				),

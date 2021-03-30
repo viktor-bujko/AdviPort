@@ -26,8 +26,9 @@ namespace AdviPort {
 			Reader = inputReader;
 		}
 
-		public static DefaultUserInputPasswordCreator NewInstance(PluginInputReader inputReader) {
-			if (Instance == null) {
+		public static DefaultUserInputPasswordCreator GetInstance(PluginInputReader inputReader) {
+			if (Instance == null || Instance.Reader != inputReader) {
+				// Creating new instance only if it does not exist yet or if the conditions change
 				Instance = new DefaultUserInputPasswordCreator(inputReader);
 			}
 

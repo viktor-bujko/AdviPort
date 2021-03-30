@@ -55,7 +55,7 @@ namespace AdviPort.Plugins {
 
 			if (loggedUser == null) {
 				Console.WriteLine("Please log in to your account first");
-				var loginExitCode = new LoginPlugin(InputReader, UserChecker).Invoke(args);
+				var loginExitCode = LoginPlugin.GetInstance(InputReader, UserChecker).Invoke(args);
 
 				if (loginExitCode != 0) { return loginExitCode; }
 			}
