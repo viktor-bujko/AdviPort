@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AdviPort.Plugins {
 
-	class AddFavouriteAirportPlugin : IPlugin {
+	class AddFavouriteAirportPlugin : ILoggedInOnlyPlugin {
 		public string Name => "Add a favourite airport";
 
 		public string Description => "Adds an airport into current account's bookmarks";
@@ -43,7 +43,7 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class RemoveFavouriteAirportPlugin : IPlugin {
+	class RemoveFavouriteAirportPlugin : ILoggedInOnlyPlugin {
 		public string Name => "Remove a favourite airport";
 
 		public string Description => "Removes an airport from current account's bookmarks";

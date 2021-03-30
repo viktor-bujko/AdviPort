@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AdviPort.Plugins {
 
-	class PrintScheduleAirport : IPlugin {
+	class PrintScheduleAirport : ILoggedInOnlyPlugin {
 		public string Name => "Print the flights schedule of a selected airport";
 
 		public string Description => "Prints the flights schedule for selected airport";
@@ -15,7 +15,7 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class SearchByFlightPlugin : IPlugin {
+	class SearchByFlightPlugin : ILoggedInOnlyPlugin {
 		public string Name => "Search for a flight by the flight number (e.g. AF 1438)";
 
 		public string Description => "Searches for a concrete flight (e.g. AF 1438)";
@@ -26,7 +26,7 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class SaveFlightInfoPlugin : IPlugin {
+	class SaveFlightInfoPlugin : ILoggedInOnlyPlugin {
 		public string Name => "Create a bookmark for a given flight";
 
 		public string Description => "Moves a flight into the followed ones";
@@ -37,7 +37,7 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class AirportInfoPlugin : IPlugin {
+	class AirportInfoPlugin : ILoggedInOnlyPlugin {
 		public string Name => "Print basic information about a specified airport";
 
 		public string Description => "Prints available information about an airport";
@@ -51,9 +51,8 @@ namespace AdviPort.Plugins {
 		}
 
 		public int Invoke(object[] args) {
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser == null) {
+			
+			if (! Session.ActiveSession.HasLoggedUser) {
 				Console.WriteLine("Please log in to your account first");
 				var loginExitCode = LoginPlugin.GetInstance(InputReader, UserChecker).Invoke(args);
 
@@ -61,13 +60,13 @@ namespace AdviPort.Plugins {
 			}
 
 			// login was successful
-			loggedUser = Session.ActiveSession.LoggedUser;
+			var loggedUser = Session.ActiveSession.LoggedUser;
 
 			return 0;
 		}
 	}
 
-	class AircraftInfoPlugin : IPlugin {
+	class AircraftInfoPlugin : ILoggedInOnlyPlugin {
 		public string Name => "Get information about different types of airplanes";
 
 		public string Description => "Prints available information about an aircraft";

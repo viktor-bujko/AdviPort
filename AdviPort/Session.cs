@@ -18,6 +18,8 @@ namespace AdviPort {
 			}
 		}
 
+		public bool HasLoggedUser => ActiveSession.LoggedUser != null;
+
 		public UserProfile LoggedUser {
 			get => loggedUser; 
 			set {

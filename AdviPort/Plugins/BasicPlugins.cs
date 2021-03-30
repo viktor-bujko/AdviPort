@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading;
 
 namespace AdviPort.Plugins {
-	class AboutAppPlugin : IPlugin {
+
+	class AboutAppPlugin : ILoggedInOnlyPlugin, ILoggedOffPlugin {
 		public string Name => "About Application";
 
 		public string Description => "Prints information about application.";
@@ -28,7 +29,7 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class ExitAppPlugin : IPlugin {
+	class ExitAppPlugin : ILoggedInOnlyPlugin, ILoggedOffPlugin {
 		public string Name => "Exit Application";
 
 		public string Description => "Quits the application";
@@ -43,7 +44,7 @@ namespace AdviPort.Plugins {
 		public UserProfile LogIn();
 	}
 
-	class LoginPlugin : ILoginHandler, IPlugin {
+	class LoginPlugin : ILoginHandler, ILoggedOffPlugin {
 		public string Name => "Login to the application";
 
 		public static LoginPlugin Instance { get; private set; }
@@ -72,9 +73,8 @@ namespace AdviPort.Plugins {
 		}
 
 		UserProfile ILoginHandler.LogIn() {
-			var loggedUser = Session.ActiveSession.LoggedUser;
 
-			if (loggedUser == null) {
+			if (! Session.ActiveSession.HasLoggedUser) {
 				Console.WriteLine("Please log in to your account first");
 				var loginExitCode = Invoke(null);
 
@@ -84,9 +84,7 @@ namespace AdviPort.Plugins {
 
 			// login was successful
 			Console.Clear();
-			loggedUser = Session.ActiveSession.LoggedUser;
-
-			return loggedUser;
+			return Session.ActiveSession.LoggedUser;
 		}
 
 		public int Invoke(object[] args) {
@@ -144,7 +142,7 @@ namespace AdviPort.Plugins {
 		void LogOut();
 	}
 
-	class LogoutPlugin : ILogoutHandler, IPlugin {
+	class LogoutPlugin : ILogoutHandler, ILoggedInOnlyPlugin {
 		public string Name => "Log out";
 
 		public string Description => "Logs out the current user.";
@@ -156,9 +154,7 @@ namespace AdviPort.Plugins {
 		}
 
 		void ILogoutHandler.LogOut() {
-			var loggedUser = Session.ActiveSession.LoggedUser;
-
-			if (loggedUser != null) {
+			if (Session.ActiveSession.HasLoggedUser) {
 				Session.ActiveSession.LoggedUser = null;
 				Console.WriteLine("Logged out successfully.");
 			} else {
