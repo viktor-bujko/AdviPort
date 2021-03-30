@@ -111,7 +111,7 @@ namespace AdviPort {
 
 			if (Plugins is null || Plugins.Count == 0) { throw new ArgumentException("No plugins are available."); }
 
-			if (input is null) { throw new ArgumentException("Incorrect input string."); }
+			if (string.IsNullOrWhiteSpace(input)) { throw new ArgumentException("Incorrect input string."); }
 
 			if (int.TryParse(input, out int pluginOrderNumber)) {
 				--pluginOrderNumber;  // Conversion from order number to Plugins array index.
@@ -122,7 +122,7 @@ namespace AdviPort {
 				}
 
 				// An incorrect number was entered.
-				Console.Error.WriteLine($"Please make sure only numbers in correct range (1 - {Plugins.Count - 1}) are entered.");
+				Console.Error.WriteLine($"Please make sure only numbers in correct range (1 - { Plugins.Count }) are entered.");
 				return null;
 			}
 			

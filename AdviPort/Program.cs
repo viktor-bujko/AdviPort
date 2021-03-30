@@ -23,10 +23,11 @@ namespace AdviPort {
 				}
 
 				IMainPageHandler mainHandler = MainPageHandlerSelector.SelectMainPageHandler(settings, reader, writer);
+				IMainPageNavigator navigator = new DefaultMainPageNavigator(reader);
 
 				mainHandler.PrintMainPageContent(settings);
 
-				var input = mainHandler.ReadUserInput();
+				var input = navigator.NavigateOrReadInput();
 
 				IExecutablePlugin chosenPlugin = mainHandler.HandlePluginChoice(input);
 
