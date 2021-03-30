@@ -34,4 +34,45 @@ namespace AdviPort.Plugins {
 			return input.Trim();
 		}
 	}
+
+	class ConsolePasswordReader : IUserInterfaceReader {
+
+		public static ConsolePasswordReader Instance { get; } = new ConsolePasswordReader();
+		protected virtual TextReader Reader { get; }
+		protected virtual TextWriter Writer { get; }
+
+		private ConsolePasswordReader() {
+			Reader = Console.In;
+			Writer = Console.Out;
+		}
+
+		public string ReadUserInput(string initialPrompt) {
+			if (! (initialPrompt == null)) {
+				Writer.Write(initialPrompt + ": ");
+			}
+
+			StringBuilder sb = new StringBuilder();
+			ConsoleKeyInfo key;
+
+			do {
+				key = Console.ReadKey(true);
+				switch (key.Key) {
+					case ConsoleKey.Escape:
+					case ConsoleKey.Backspace:
+					case ConsoleKey.Home:
+					case ConsoleKey.End:
+						continue;
+					case ConsoleKey.Enter:
+						Console.SetCursorPosition(0, Console.CursorTop + 1);
+						break;
+					default:
+						sb.Append(key.KeyChar);
+						break;
+				}
+
+			} while (key.Key != ConsoleKey.Enter);
+
+			return sb.ToString();
+		}
+	}
 }

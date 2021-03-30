@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace AdviPort.Plugins {
 	class AboutAppPlugin : IPlugin {
@@ -63,17 +64,33 @@ namespace AdviPort.Plugins {
 			int passwordAttempts = 5;
 			bool loginSuccess;
 			bool tryAnotherAttempt;
+			string passwordAttemptsWarning = "";
 
 			do {
-				var userPasswd = InputReader.ReadUserInput($"Enter your password ({passwordAttempts} attempts left)");
-				userPasswd = Encryptor.Encrypt(userPasswd);
+				int cursorRow = Console.CursorTop;
+				var userPasswd = ConsolePasswordReader.Instance.ReadUserInput($"Enter your password{passwordAttemptsWarning}");
+				loginSuccess = false;
+				tryAnotherAttempt = true;
 
-				loginSuccess = user.Password == userPasswd;
+				if (!  string.IsNullOrWhiteSpace(userPasswd)) {
+					userPasswd = Encryptor.Encrypt(userPasswd);
+					loginSuccess = user.Password == userPasswd;
 
-				tryAnotherAttempt = passwordAttempts-- > 0 && !loginSuccess;
+					tryAnotherAttempt = --passwordAttempts > 0 && !loginSuccess;
+				}
+
+				if (!loginSuccess) {
+					if (passwordAttempts <= 3) {
+						passwordAttemptsWarning = $" ({passwordAttempts} attempts left)";
+					}
+
+					WaitAndClearLine(cursorRow);
+				}
 
 			} while (tryAnotherAttempt);
 
+			// Loop breaks after a successful login - if will not succeed
+			// or when max attempts are reached without success.
 			if (!loginSuccess) {
 				Console.Error.WriteLine("Too many incorrect attempts. Please try again.");
 				return 1;
@@ -83,14 +100,34 @@ namespace AdviPort.Plugins {
 			Session.ActiveSession.LoggedUser = user;
 			return 0;
 		}
+
+		private void WaitAndClearLine(int initPosition) {
+			Console.WriteLine("Incorrect password");
+			Thread.Sleep(350);
+
+			Console.SetCursorPosition(0, initPosition);
+			Console.WriteLine(new string(' ', Console.WindowWidth));
+			Console.WriteLine(new string(' ', Console.WindowWidth));
+			Console.SetCursorPosition(0, initPosition);
+		}
 	}
 
-	class LogoutPlugin : IPlugin {
+	interface ILogoutHandler {
+		void LogOut();
+	}
+
+	class LogoutPlugin : ILogoutHandler, IPlugin {
 		public string Name => "Log out";
 
 		public string Description => "Logs out the current user.";
 
 		public int Invoke(object[] args) {
+
+			((ILogoutHandler)this).LogOut();
+			return 0;
+		}
+
+		void ILogoutHandler.LogOut() {
 			var loggedUser = Session.ActiveSession.LoggedUser;
 
 			if (loggedUser != null) {
