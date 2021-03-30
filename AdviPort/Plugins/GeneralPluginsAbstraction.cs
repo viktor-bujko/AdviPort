@@ -74,5 +74,13 @@ namespace AdviPort.Plugins {
 
 			return sb.ToString();
 		}
+
+		public void ConsoleClearLine(int initPosition, int rowsToClear = 2) {
+			Console.SetCursorPosition(0, initPosition);
+			for (int i = 0; i < rowsToClear; i++) {
+				Console.WriteLine(new string(' ', Console.WindowWidth));
+			}
+			Console.SetCursorPosition(0, initPosition);
+		}
 	}
 }

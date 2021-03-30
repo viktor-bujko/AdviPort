@@ -120,7 +120,9 @@ namespace AdviPort.Plugins {
 						passwordAttemptsWarning = $" ({passwordAttempts} attempts left)";
 					}
 
-					WaitAndClearLine(cursorRow);
+					Console.WriteLine("Incorrect password");
+					Thread.Sleep(350);
+					ConsolePasswordReader.Instance.ConsoleClearLine(cursorRow);
 				}
 
 			} while (tryAnotherAttempt);
@@ -135,16 +137,6 @@ namespace AdviPort.Plugins {
 			Console.WriteLine("Login successful.");
 			Session.ActiveSession.LoggedUser = user;
 			return 0;
-		}
-
-		private void WaitAndClearLine(int initPosition) {
-			Console.WriteLine("Incorrect password");
-			Thread.Sleep(350);
-
-			Console.SetCursorPosition(0, initPosition);
-			Console.WriteLine(new string(' ', Console.WindowWidth));
-			Console.WriteLine(new string(' ', Console.WindowWidth));
-			Console.SetCursorPosition(0, initPosition);
 		}
 	}
 

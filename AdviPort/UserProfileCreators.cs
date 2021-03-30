@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using AdviPort.Plugins;
 
 namespace AdviPort {
@@ -42,7 +43,16 @@ namespace AdviPort {
 			string passwd1;
 
 			do {
-				passwd1 = Reader.ReadUserInput("Please enter password you want to use (at least 8 characters - letters and numbers only)");
+				incorrectPassword = true;
+				int cursor = Console.CursorTop;
+				passwd1 = ConsolePasswordReader.Instance.ReadUserInput("Please enter password you want to use (at least 8 characters - letters and numbers only)");
+
+				if (string.IsNullOrWhiteSpace(passwd1)) {
+					Console.Error.WriteLine("The password cannot be empty. Please try again.");
+					Thread.Sleep(350);
+					ConsolePasswordReader.Instance.ConsoleClearLine(cursor);
+					continue; 
+				}
 
 				if (!regex.IsMatch(passwd1)) {
 					Console.Error.WriteLine("Please make sure your password contains at least 8 characters (letters and numbers only)");
@@ -50,7 +60,7 @@ namespace AdviPort {
 					continue;
 				}
 
-				var passwd2 = Reader.ReadUserInput("Please type your password again");
+				var passwd2 = ConsolePasswordReader.Instance.ReadUserInput("Please type your password again");
 
 				if (passwd1 != passwd2) {
 					Console.Error.WriteLine("Passwords do not match. Please try again.");

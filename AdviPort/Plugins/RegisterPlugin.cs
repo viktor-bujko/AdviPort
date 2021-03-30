@@ -32,6 +32,11 @@ namespace AdviPort.Plugins {
 
 			var userName = InputReader.ReadUserInput("Please enter a name you want to register");
 
+			if (string.IsNullOrWhiteSpace(userName)) {
+				Console.Error.WriteLine("User with empty name cannot be registered. Please use at least one non-whitespace character.");
+				return 1;
+			}
+
 			if (UserChecker.UserExists(userName)) {
 				Console.Error.WriteLine($"A user with name {userName} already exists. Please choose another name.");
 				return 1;
