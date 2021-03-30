@@ -83,7 +83,7 @@ namespace AdviPort {
 		public virtual void PrintAvailablePlugins() {
 			int maxPrinted = int.MinValue;
 
-			for (int i = 0; i < Plugins.Length; i++) {
+			for (int i = 0; i < Plugins.Count; i++) {
 				var printedLength = PrintMainPagePluginOption(Plugins[i], i + 1);
 
 				maxPrinted = printedLength > maxPrinted ? printedLength : maxPrinted;
@@ -106,20 +106,20 @@ namespace AdviPort {
 
 		public IPlugin HandlePluginChoice(string input) {
 
-			if (Plugins is null || Plugins.Length == 0) { throw new ArgumentException("No plugins are available."); }
+			if (Plugins is null || Plugins.Count == 0) { throw new ArgumentException("No plugins are available."); }
 
 			if (input is null) { throw new ArgumentException("Incorrect input string."); }
 
 			if (int.TryParse(input, out int pluginOrderNumber)) {
 				--pluginOrderNumber;  // Conversion from order number to Plugins array index.
 				
-				if (pluginOrderNumber >= 0 && pluginOrderNumber < Plugins.Length) {
+				if (pluginOrderNumber >= 0 && pluginOrderNumber < Plugins.Count) {
 					// Correct Plugins array index
 					return Plugins[pluginOrderNumber];
 				}
 
 				// An incorrect number was entered.
-				Console.Error.WriteLine($"Please make sure only numbers in correct range (1 - {Plugins.Length - 1}) are entered.");
+				Console.Error.WriteLine($"Please make sure only numbers in correct range (1 - {Plugins.Count - 1}) are entered.");
 				return null;
 			}
 			
@@ -253,7 +253,7 @@ ________________________________________________________________________________
 			//var consoleBackupColor = Console.BackgroundColor;
 			var maxPrinted = int.MinValue;
 
-			for (int i = 0; i < Plugins.Length; i++) {
+			for (int i = 0; i < Plugins.Count; i++) {
 				/*Console.BackgroundColor = (ConsoleColor)new Random().Next(1, 9);
 				/if (Console.BackgroundColor == (ConsoleColor)7) { Console.BackgroundColor++; }*/
 				 var printedLength = PrintMainPagePluginOption(Plugins[i], i + 1);
@@ -334,7 +334,7 @@ ________________________________________________________________________________
 
 			var maxPrinted = int.MinValue;
 
-			for (int i = 0; i < Plugins.Length; i++) {
+			for (int i = 0; i < Plugins.Count; i++) {
 				var printedLength = PrintMainPagePluginOption(Plugins[i], i + 1);
 
 				maxPrinted = printedLength > maxPrinted ? printedLength : maxPrinted;

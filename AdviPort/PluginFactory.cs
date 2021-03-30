@@ -50,7 +50,7 @@ namespace AdviPort {
 			return plugin;
 		}
 
-		public static IPlugin[] GetAvailablePlugins(GeneralApplicationSettings settings, TextReader reader, TextWriter writer) {
+		public static IList<IPlugin> GetAvailablePlugins(GeneralApplicationSettings settings, TextReader reader, TextWriter writer) {
 
 			List<IPlugin> plugins = new List<IPlugin>(settings.AvailablePlugins.Length);
 
@@ -61,10 +61,10 @@ namespace AdviPort {
 				plugins.Add(plugin);
 			}
 
-			return plugins.ToArray();
+			return plugins;
 		}
 
-		internal static bool TryGetPluginFromInputString(string input, IPlugin[] plugins, out List<IPlugin> filteredPlugins) {
+		internal static bool TryGetPluginFromInputString(string input, IList<IPlugin> plugins, out List<IPlugin> filteredPlugins) {
 			filteredPlugins = new List<IPlugin>();
 			input = input.ToLower();
 
@@ -75,7 +75,7 @@ namespace AdviPort {
 				return true;
 			}
 
-			for (int i = 0; i < plugins.Length; i++) {
+			for (int i = 0; i < plugins.Count; i++) {
 				bool inputIsSubstring = plugins[i].Name.ToLower().StartsWith(input);
 
 				if (inputIsSubstring) filteredPlugins.Add(plugins[i]);
