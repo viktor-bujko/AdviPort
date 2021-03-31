@@ -46,24 +46,24 @@ namespace AdviPort {
 		public static IMainPageHandler SelectMainPageHandler(GeneralApplicationSettings settings) {
 
 			CommonMainPageHandler handler = settings.MainPageStyle switch {
-				"" => ClassicMainPageHandler.NewInstance(),
-				"classic" => ClassicMainPageHandler.NewInstance(),
-				"decorative" => DecorativeMainPageHandler.NewInstance(),
-				"descriptive" => DescriptiveMainPageHandler.NewInstance(ClassicMainPageHandler.NewInstance()),
-				"decorative/descriptive" => DescriptiveMainPageHandler.NewInstance(DecorativeMainPageHandler.NewInstance()),
-				"descriptive/decorative" => DescriptiveMainPageHandler.NewInstance(DecorativeMainPageHandler.NewInstance()),
+				"" => ClassicMainPageHandler.Instance,
+				"classic" => ClassicMainPageHandler.Instance,
+				"decorative" => DecorativeMainPageHandler.Instance,
+				"descriptive" => DescriptiveMainPageHandler.GetInstance(ClassicMainPageHandler.Instance),
+				"decorative/descriptive" => DescriptiveMainPageHandler.GetInstance(DecorativeMainPageHandler.Instance),
+				"descriptive/decorative" => DescriptiveMainPageHandler.GetInstance(DecorativeMainPageHandler.Instance),
 				_ => null,
 			};
 
 			if (handler == null) {
 				Console.Error.WriteLine("Unsupported main page printer.");
-				handler = ClassicMainPageHandler.NewInstance();
+				handler = ClassicMainPageHandler.Instance;
 			}
 
 			if (! Session.ActiveSession.HasLoggedUser)
 				return handler;
 			else
-				return ShowLoggedUserMainPageHandler.NewInstance(handler);
+				return ShowLoggedUserMainPageHandler.GetInstance(handler);
 		}
 	}
 
@@ -144,7 +144,7 @@ namespace AdviPort {
 	class ClassicMainPageHandler : CommonMainPageHandler {
 
 		// Only a single instance of this type is expected to be needed.
-		private static ClassicMainPageHandler Instance { get; set; }
+		public static ClassicMainPageHandler Instance { get; } = new ClassicMainPageHandler();
 
 		public override string MainPageHeader => @"
  █████╗ ██████╗ ██╗   ██╗██╗██████╗  ██████╗ ██████╗ ████████╗
@@ -157,15 +157,6 @@ ______________________________________________________________
 ";
 
 		private ClassicMainPageHandler() { }
-
-		public static ClassicMainPageHandler NewInstance() {
-			if (Instance is null) {
-				// Creating new instance only if it does not exist yet or if the conditions change
-				Instance = new ClassicMainPageHandler();
-			}
-
-			return Instance;
-		}
 
 		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
 			Console.WriteLine(MainPageHeader);
@@ -190,7 +181,7 @@ ______________________________________________________________
 
 	class DecorativeMainPageHandler : CommonMainPageHandler {
 
-		private static DecorativeMainPageHandler Instance { get; set; }
+		public static DecorativeMainPageHandler Instance { get; } = new DecorativeMainPageHandler();
 
 		private readonly int freeSpaces;
 		private readonly PageDecoration sideDecoration, planeDecoration;
@@ -217,19 +208,8 @@ ________________________________________________________________________________
 			planeDecoration = new PageDecoration(@"..\..\..\decorations\airplane_decoration.txt");
 		}
 
-		public static DecorativeMainPageHandler NewInstance() {
-			if (Instance is null) {
-				// Creating new instance only if it does not exist yet or if the conditions change
-				Instance = new DecorativeMainPageHandler();
-			}
-
-			return Instance;
-		}
-
 		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
-			Console.BackgroundColor = ConsoleColor.Blue;
 			Console.WriteLine(MainPageHeader);
-			Console.BackgroundColor = ConsoleColor.Black;
 			planeDecoration.Print(2, title: "«« MAIN MENU »»");
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
 			PrintAvailablePlugins();
@@ -296,7 +276,7 @@ ________________________________________________________________________________
 			BaseMainPageHandler = baseHandler;
 		}
 
-		public static DescriptiveMainPageHandler NewInstance(CommonMainPageHandler baseHandler) {
+		public static DescriptiveMainPageHandler GetInstance(CommonMainPageHandler baseHandler) {
 			if (Instance == null) {
 				Instance = new DescriptiveMainPageHandler(baseHandler);
 			}
@@ -342,7 +322,7 @@ ________________________________________________________________________________
 
 		public override string MainPageHeader => BaseHandler.MainPageHeader;
 
-		public static ShowLoggedUserMainPageHandler NewInstance(CommonMainPageHandler baseHandler) {
+		public static ShowLoggedUserMainPageHandler GetInstance(CommonMainPageHandler baseHandler) {
 			if (Instance == null || Instance.BaseHandler != baseHandler) {
 				Instance = new ShowLoggedUserMainPageHandler(baseHandler);
 			}
