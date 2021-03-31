@@ -13,7 +13,33 @@ namespace AdviPort.Plugins {
 		string Description { get; }
 	}
 
-	interface ILoggedInOnlyPlugin : IPlugin { }
+	abstract class LoggedInOnlyPlugin : IPlugin {
+		public abstract string Name { get; }
+
+		public abstract string Description { get; }
+
+		protected virtual ILoginHandler LoginHandler { get; }
+
+		protected LoggedInOnlyPlugin(ILoginHandler loginHandler) {
+			LoginHandler = loginHandler;
+		}
+
+		protected LoggedInOnlyPlugin() { }
+
+		public virtual int Invoke(object[] args) {
+			UserProfile loggedUser;
+			if (!Session.ActiveSession.HasLoggedUser) {
+				Console.WriteLine("Please log in to your account first");
+				loggedUser = LoginHandler.LogIn();
+			} else {
+				loggedUser = Session.ActiveSession.LoggedUser;
+			}
+
+			if (loggedUser == null) { return 1; }
+
+			return 0;
+		}
+	}
 
 	interface ILoggedOffOnlyPlugin : IPlugin { }
 

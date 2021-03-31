@@ -5,12 +5,16 @@ using System.Text;
 
 namespace AdviPort.Plugins {
 
-	class AboutAppPlugin : ILoggedInOnlyPlugin, ILoggedOffOnlyPlugin {
-		public string Name => "About Application";
+	class AboutAppPlugin : LoggedInOnlyPlugin, ILoggedOffOnlyPlugin {
 
-		public string Description => "Prints information about application.";
+		public static AboutAppPlugin Instance { get; } = new AboutAppPlugin();
+		public override string Name => "About Application";
 
-		public int Invoke(object[] args) {
+		public override string Description => "Prints information about application.";
+
+		private AboutAppPlugin() { }
+
+		public override int Invoke(object[] args) {
 			string[] paths = GeneralApplicationSettings.SearchFiles(Directory.GetCurrentDirectory(), "about.txt", requiredFiles: 1);
 
 			if (paths is null) throw new FileNotFoundException("A required file has not been found.");
@@ -28,12 +32,17 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class ExitAppPlugin : ILoggedInOnlyPlugin, ILoggedOffOnlyPlugin {
-		public string Name => "Exit Application";
+	class ExitAppPlugin : LoggedInOnlyPlugin, ILoggedOffOnlyPlugin {
 
-		public string Description => "Quits the application";
+		public static ExitAppPlugin Instance { get; } = new ExitAppPlugin();
 
-		public int Invoke(object[] args) {
+		private ExitAppPlugin() { }
+
+		public override string Name => "Exit Application";
+
+		public override string Description => "Quits the application";
+
+		public override int Invoke(object[] args) {
 			Console.WriteLine("Exiting ADVIPORT application.");
 			return 0;
 		}

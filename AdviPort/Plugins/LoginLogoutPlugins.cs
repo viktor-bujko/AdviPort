@@ -15,7 +15,7 @@ namespace AdviPort.Plugins {
 	class LoginPlugin : ILoginHandler, ILoggedOffOnlyPlugin {
 		public string Name => "Login to the application";
 
-		public static LoginPlugin Instance { get; private set; }
+		internal static LoginPlugin Instance { get; private set; }
 
 		public string Description => "Logs in as user";
 
@@ -101,12 +101,17 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	class LogoutPlugin : ILogoutHandler, ILoggedInOnlyPlugin {
-		public string Name => "Log out";
+	class LogoutPlugin : LoggedInOnlyPlugin, ILogoutHandler {
 
-		public string Description => "Logs out the current user.";
+		internal static LogoutPlugin Instance { get; } = new LogoutPlugin();
 
-		public int Invoke(object[] args) {
+		public override string Name => "Log out";
+
+		public override string Description => "Logs out the current user.";
+
+		private LogoutPlugin() { }
+
+		public override int Invoke(object[] args) {
 
 			((ILogoutHandler)this).LogOut();
 			return 0;

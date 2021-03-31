@@ -6,7 +6,6 @@ using System.Text.Json;
 using AdviPort.Plugins;
 
 namespace AdviPort {
-
 	internal static class PluginSelector {
 		internal static IPlugin SearchPluginByName(string pluginName) {
 
@@ -15,7 +14,9 @@ namespace AdviPort {
 			PluginInputReader inputReader = new PluginInputReader();
 
 			IPlugin plugin = pluginName switch {
-				"register" => new RegisterAPIKeyPlugin(
+				"about" => AboutAppPlugin.Instance,
+				"exit" => ExitAppPlugin.Instance,
+				"register" => RegisterAPIKeyPlugin.GetInstance(
 					inputReader,
 					appDatabase,
 					DefaultUserInputPasswordCreator.GetInstance(inputReader),
@@ -25,21 +26,23 @@ namespace AdviPort {
 					inputReader, 
 					appDatabase
 				),
-				"logout" => new LogoutPlugin(),
-				"add_favourite" => new AddFavouriteAirportPlugin(
+				"logout" => LogoutPlugin.Instance,
+				"add_favourite" => AddFavouriteAirportPlugin.GetInstance(
 					inputReader, 
-					new RapidAPIAirportInfoFinder(),
+					new AeroDataBoxProvider(),
 					appDatabase,
 					profileWriter
 				),
-				"remove_favourite" => new RemoveFavouriteAirportPlugin(
+				"remove_favourite" => RemoveFavouriteAirportPlugin.GetInstance(
 					inputReader,
 					appDatabase,
 					profileWriter
 				),
-				"print_schedule" => new PrintScheduleAirport(),
-				"about" => new AboutAppPlugin(),
-				"exit" => new ExitAppPlugin(),
+				"print_schedule" => PrintScheduleAirport.GetInstance(
+					inputReader, 
+					new AeroDataBoxProvider(),
+					appDatabase
+				),
 				"search_by_flight" => new SearchByFlightPlugin(),
 				"save_flight_info" => new SaveFlightInfoPlugin(),
 				"airport_info" => new AirportInfoPlugin(inputReader, appDatabase),
@@ -58,8 +61,8 @@ namespace AdviPort {
 				var plugin = SearchPluginByName(pluginName);
 				if (plugin is null) continue;
 
-				if (! (plugin is ILoggedInOnlyPlugin) || ! (plugin is ILoggedOffOnlyPlugin)) {
-					if (!Session.ActiveSession.HasLoggedUser && plugin is ILoggedInOnlyPlugin) continue;
+				if (! (plugin is LoggedInOnlyPlugin) || ! (plugin is ILoggedOffOnlyPlugin)) {
+					if (!Session.ActiveSession.HasLoggedUser && plugin is LoggedInOnlyPlugin) continue;
 					if (Session.ActiveSession.HasLoggedUser && plugin is ILoggedOffOnlyPlugin) continue;
 				}
 
@@ -76,7 +79,7 @@ namespace AdviPort {
 			if (string.IsNullOrEmpty(input)) return false;
 
 			if (input == "exit" || input == "quit") {
-				filteredPlugins.Add(new ExitAppPlugin());
+				filteredPlugins.Add(ExitAppPlugin.Instance);
 				return true;
 			}
 

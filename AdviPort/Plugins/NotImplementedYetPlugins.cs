@@ -4,43 +4,32 @@ using System.Text;
 
 namespace AdviPort.Plugins {
 
-	class PrintScheduleAirport : ILoggedInOnlyPlugin {
-		public string Name => "Print the flights schedule of a selected airport";
+	class SearchByFlightPlugin : LoggedInOnlyPlugin {
+		public override string Name => "Search for a flight by the flight number (e.g. AF 1438)";
 
-		public string Description => "Prints the flights schedule for selected airport";
+		public override string Description => "Searches for a concrete flight (e.g. AF 1438)";
 
-		public int Invoke(object[] args) {
+		public override int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
 			return 0;
 		}
 	}
 
-	class SearchByFlightPlugin : ILoggedInOnlyPlugin {
-		public string Name => "Search for a flight by the flight number (e.g. AF 1438)";
+	class SaveFlightInfoPlugin : LoggedInOnlyPlugin {
+		public override string Name => "Create a bookmark for a given flight";
 
-		public string Description => "Searches for a concrete flight (e.g. AF 1438)";
+		public override string Description => "Moves a flight into the followed ones";
 
-		public int Invoke(object[] args) {
+		public override int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
 			return 0;
 		}
 	}
 
-	class SaveFlightInfoPlugin : ILoggedInOnlyPlugin {
-		public string Name => "Create a bookmark for a given flight";
+	class AirportInfoPlugin : LoggedInOnlyPlugin {
+		public override string Name => "Print basic information about a specified airport";
 
-		public string Description => "Moves a flight into the followed ones";
-
-		public int Invoke(object[] args) {
-			Console.WriteLine($"Hello From {Name}!");
-			return 0;
-		}
-	}
-
-	class AirportInfoPlugin : ILoggedInOnlyPlugin {
-		public string Name => "Print basic information about a specified airport";
-
-		public string Description => "Prints available information about an airport";
+		public override string Description => "Prints available information about an airport";
 
 		private PluginInputReader InputReader { get; }
 		private IUserChecker UserChecker { get; }
@@ -50,28 +39,20 @@ namespace AdviPort.Plugins {
 			UserChecker = userChecker;
 		}
 
-		public int Invoke(object[] args) {
-			
-			if (! Session.ActiveSession.HasLoggedUser) {
-				Console.WriteLine("Please log in to your account first");
-				var loginExitCode = LoginPlugin.GetInstance(InputReader, UserChecker).Invoke(args);
+		public override int Invoke(object[] args) {
 
-				if (loginExitCode != 0) { return loginExitCode; }
-			}
-
-			// login was successful
-			var loggedUser = Session.ActiveSession.LoggedUser;
+			int baseRetVal = base.Invoke(args);
 
 			return 0;
 		}
 	}
 
-	class AircraftInfoPlugin : ILoggedInOnlyPlugin {
-		public string Name => "Get information about different types of airplanes";
+	class AircraftInfoPlugin : LoggedInOnlyPlugin {
+		public override string Name => "Get information about different types of airplanes";
 
-		public string Description => "Prints available information about an aircraft";
+		public override string Description => "Prints available information about an aircraft";
 
-		public int Invoke(object[] args) {
+		public override int Invoke(object[] args) {
 			Console.WriteLine($"Hello From {Name}!");
 			return 0;
 		}
