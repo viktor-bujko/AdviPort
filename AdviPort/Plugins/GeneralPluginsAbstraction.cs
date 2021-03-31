@@ -15,7 +15,7 @@ namespace AdviPort.Plugins {
 
 	interface ILoggedInOnlyPlugin : IPlugin { }
 
-	interface ILoggedOffPlugin : IPlugin { }
+	interface ILoggedOffOnlyPlugin : IPlugin { }
 
 	class PluginInputReader : IUserInterfaceReader {
 

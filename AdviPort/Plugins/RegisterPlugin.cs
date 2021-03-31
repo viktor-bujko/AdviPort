@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace AdviPort.Plugins {
-	class RegisterAPIKeyPlugin : ILoggedOffPlugin {
+	class RegisterAPIKeyPlugin : ILoggedOffOnlyPlugin {
 		public string Name => "Register API key";
 
 		public string Description => "Registers a new user and his / her API key";
