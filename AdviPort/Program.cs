@@ -22,9 +22,9 @@ namespace AdviPort {
 				IMainPageNavigator navigator = new DefaultMainPageNavigator();
 
 
-				mainHandler.PrintMainPageContent(settings);
+				mainHandler.PrintMainPageContent(settings, out int printedPlugins);
 
-				var input = navigator.NavigateOrReadInput();
+				var input = navigator.NavigateOrReadInput(printedPlugins);
 
 				IExecutablePlugin chosenPlugin = mainHandler.HandlePluginChoice(input);
 

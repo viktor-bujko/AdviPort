@@ -17,6 +17,7 @@
 		"print_schedule",
 		"search_by_flight",
 		"airport_info",
-		"about"
+		"about",
+		"exit"
 	]
 }

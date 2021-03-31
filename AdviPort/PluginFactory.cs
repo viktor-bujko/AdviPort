@@ -58,8 +58,10 @@ namespace AdviPort {
 				var plugin = SearchPluginByName(pluginName);
 				if (plugin is null) continue;
 
-				if (!Session.ActiveSession.HasLoggedUser && plugin is ILoggedInOnlyPlugin) continue;
-				if (Session.ActiveSession.HasLoggedUser && plugin is ILoggedOffPlugin) continue;
+				if (! (plugin is ILoggedInOnlyPlugin) || ! (plugin is ILoggedOffPlugin)) {
+					if (!Session.ActiveSession.HasLoggedUser && plugin is ILoggedInOnlyPlugin) continue;
+					if (Session.ActiveSession.HasLoggedUser && plugin is ILoggedOffPlugin) continue;
+				}
 
 				plugins.Add(plugin);
 			}

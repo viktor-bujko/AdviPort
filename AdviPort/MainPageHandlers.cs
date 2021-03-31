@@ -12,7 +12,7 @@ namespace AdviPort {
 	/// of different plugins.
 	/// </summary>
 	interface IMainPagePrinter {
-		void PrintMainPageContent(GeneralApplicationSettings settings);
+		void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins);
 
 		int PrintMainPagePluginOption(IPlugin plugin, int orderNumber);
 	}
@@ -73,7 +73,7 @@ namespace AdviPort {
 
 		protected virtual IList<IPlugin> Plugins { get; set; }
 
-		public abstract void PrintMainPageContent(GeneralApplicationSettings settings);
+		public abstract void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins);
 
 		public abstract int PrintMainPagePluginOption(IPlugin plugin, int orderNumber);
 
@@ -132,7 +132,7 @@ namespace AdviPort {
 				Console.Error.Write("No corresponding plugin has been found. Please type the order number or entire first word of the plugin.");
 			} else {
 				Console.Error.Write($"{filteredPlugins.Count} matching plugins has been found. Please specify an exact number of the plugin.");
-				Plugins = filteredPlugins.ToArray();
+				Plugins = filteredPlugins;
 			}
 
 			return null;
@@ -158,10 +158,11 @@ ______________________________________________________________
 
 		private ClassicMainPageHandler() { }
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
+		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
 			Console.WriteLine(MainPageHeader);
 
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
+			printedPlugins = Plugins.Count;
 			PrintAvailablePlugins();
 		}
 		
@@ -208,10 +209,11 @@ ________________________________________________________________________________
 			planeDecoration = new PageDecoration(@"..\..\..\decorations\airplane_decoration.txt");
 		}
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
+		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
 			Console.WriteLine(MainPageHeader);
 			planeDecoration.Print(2, title: "«« MAIN MENU »»");
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
+			printedPlugins = Plugins.Count;
 			PrintAvailablePlugins();
 		}
 
@@ -284,9 +286,10 @@ ________________________________________________________________________________
 			return Instance;
 		}
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
+		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
 			Console.WriteLine(MainPageHeader);
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
+			printedPlugins = Plugins.Count;
 
 			var maxPrinted = int.MinValue;
 
@@ -330,7 +333,7 @@ ________________________________________________________________________________
 			return Instance;
 		}
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
+		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
 
 			if (! Session.ActiveSession.HasLoggedUser) throw new ArgumentException("This main page handler should not be used without logged user.");
 
@@ -340,6 +343,7 @@ ________________________________________________________________________________
 			Console.WriteLine($"Welcome back, {loggedUser.UserName}\n");
 
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
+			printedPlugins = Plugins.Count;
 
 			if (Plugins.Contains(LoginPlugin.Instance)) {
 				Plugins.Remove(LoginPlugin.Instance);

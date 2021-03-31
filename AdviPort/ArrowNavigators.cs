@@ -6,46 +6,72 @@ using System.Text;
 namespace AdviPort {
 
 	interface IMainPageNavigator {
-		string NavigateOrReadInput();
+		string NavigateOrReadInput(int maxPlugins);
 	}
 
 	class DefaultMainPageNavigator : IMainPageNavigator {
 
-	
-		public string NavigateOrReadInput() {
+		private int cursorTop;
+		private int maxPlugins;
+		private string message = "Please enter your choice: ";
 
-			int cursor = Console.CursorTop;
-			Console.Write("Please enter your choice: ");
-			int arrowNav = 0;
-			StringBuilder sb = new StringBuilder();
+		public string NavigateOrReadInput(int maxPlugins) {
 
-			while (true) {
-				var key = Console.ReadKey();
+			bool textReadState = true;
+			cursorTop = Console.CursorTop;
+			this.maxPlugins = maxPlugins;
+			string resultInput;
 
-				if (key.Key == ConsoleKey.Enter) { break; }
-				if (key.Key == ConsoleKey.DownArrow) {
-					ClearAndWritePosition(++arrowNav, cursor);
+			do {
+				Console.Write(message);
+
+				if (textReadState) {
+					resultInput = ReadInput();
+				} else {
+					resultInput = Navigate(0);
 				}
-				if (key.Key == ConsoleKey.UpArrow) {
-					ClearAndWritePosition(--arrowNav, cursor);
-				}
+			} while (resultInput == null);
 
-				sb.Append(key.KeyChar);
-			}
-
-			if (arrowNav > 0) {
-				Console.WriteLine(arrowNav);
-				return arrowNav.ToString();
-			}
-	
-			Console.WriteLine(sb.ToString());
-			return sb.ToString();
+			return resultInput;
 		}
 
-		private void ClearAndWritePosition(int position, int initCursorPosition) {
-			// TODO: Change this
-			Plugins.ConsolePasswordReader.Instance.ConsoleClearLine(initCursorPosition);
-			Console.Write($"Currently chosen plugin: {position}");
+		private string ReadInput() {
+			var key = Console.ReadKey();
+
+			if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.DownArrow) { return Navigate(1); }
+			if (key.Key == ConsoleKey.Spacebar || key.Key == ConsoleKey.Backspace) {
+				Console.CursorLeft = message.Length;
+				return ReadInput();
+			}
+
+			string stringInput = Console.ReadLine();
+
+			return key.KeyChar + stringInput;
+		}
+
+		private string Navigate(int initValue) {
+			ConsoleKeyInfo key;
+			int position = initValue;
+
+			do {
+				Console.Write(position);
+				key = Console.ReadKey();
+				Console.CursorLeft = message.Length; 
+				
+				if (key.Key == ConsoleKey.UpArrow) { --position; }
+				if (key.Key == ConsoleKey.DownArrow && position + 1 <= maxPlugins) { ++position; }
+
+				if (position == 0) {
+					Console.CursorLeft = message.Length;
+					Console.Write(new string(' ', Console.WindowWidth));
+					Console.CursorLeft = message.Length;
+					Console.CursorTop = cursorTop;
+					return ReadInput();
+				}
+
+			} while (key.Key != ConsoleKey.Enter);
+
+			return position.ToString();
 		}
 	}
 }
