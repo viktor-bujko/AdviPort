@@ -100,4 +100,44 @@ namespace AdviPort.Plugins {
 			return ProfileWriter.WriteUserProfile(loggedUser);
 		}
 	}
+
+	class PrintScheduleAirport : LoggedInOnlyPlugin {
+
+		private static PrintScheduleAirport Instance { get; set; }
+
+		public override string Name => "Print the flights schedule of a selected airport";
+
+		public override string Description => "Prints the flights schedule for selected airport";
+
+		private IUserInterfaceReader InputReader { get; }
+		private IAirportScheduleProvider ScheduleProvider { get; }
+
+		private PrintScheduleAirport(IUserInterfaceReader inputReader, IAirportScheduleProvider scheduleProvider, IUserChecker userChecker) : base(LoginPlugin.GetInstance(inputReader, userChecker)) {
+			InputReader = inputReader;
+			ScheduleProvider = scheduleProvider;
+		}
+
+		public static PrintScheduleAirport GetInstance(IUserInterfaceReader inputReader, IAirportScheduleProvider scheduleProvider, IUserChecker userChecker) {
+			if (Instance == null) {
+				Instance = new PrintScheduleAirport(inputReader, scheduleProvider, userChecker);
+			}
+
+			return Instance;
+		}
+
+		public override int Invoke(object[] args) {
+
+			int baseRetVal = base.Invoke(args);
+			if (baseRetVal != 0) { return baseRetVal; }
+
+			var airportIcao = InputReader.ReadUserInput("Please enter the ICAO code of the airport to get the schedule from");
+
+			var schedule = ScheduleProvider.GetAirportSchedule(airportIcao);
+
+			Console.WriteLine(schedule);
+
+			return 0;
+		}
+
+	}
 }

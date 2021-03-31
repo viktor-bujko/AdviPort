@@ -21,6 +21,9 @@ namespace AdviPort.ResponseObjects {
 	}
 
 	public class Flight {
+		
+		internal virtual string[] Labels { get; } = { "a", "b", "c" };
+
 		public Aircraft Aircraft { get; set; }
 		public Airline Airline { get; set; }
 		public Arrival Arrival { get; set; }
@@ -30,6 +33,44 @@ namespace AdviPort.ResponseObjects {
 		public bool IsCargo { get; set; }
 		public string Number { get; set; }
 		public string Status { get; set; }
+
+		public string ToString(byte[] cursorPositions, bool isArrival) {
+			const string unknown = "------";
+			StringBuilder sb = new StringBuilder();
+			DateTime localTime, scheduledTime;
+			if (isArrival) {
+				localTime = DateTime.Parse(Arrival.ActualTimeLocal);
+				scheduledTime = DateTime.Parse(Arrival.ScheduledTimeLocal);
+			} else {
+				localTime = DateTime.Parse(Departure.ActualTimeLocal);
+				scheduledTime = DateTime.Parse(Departure.ScheduledTimeLocal);
+			}
+
+			string[] fields = {
+				CallSign ?? unknown,
+				Departure?.Airport?.Name ?? unknown,
+				localTime.ToShortTimeString(),
+				scheduledTime.ToShortTimeString(),
+				Arrival?.Terminal ?? "--",
+				Arrival?.BaggageBelt ?? "--",
+				Status ?? unknown
+			};
+
+			if (cursorPositions == null) {
+				Array.Fill<byte>(cursorPositions, 10);
+			}
+
+			int totalLength = 0;
+
+			for (int i = 0; i < fields.Length; i++) {
+				sb.Append(fields[i]);
+				totalLength += fields[i].Length;
+				string padding = new string(' ', Math.Max(0, cursorPositions[i] - totalLength));
+				sb.Append(padding);
+				totalLength += padding.Length;
+			}
+			return sb.ToString();
+		}
 	}
 
 	public class Arrival {
@@ -54,6 +95,45 @@ namespace AdviPort.ResponseObjects {
 		public string ScheduledTimeLocal { get; set; }
 		public string ScheduledTimeUtc { get; set; }
 		public string Terminal { get; set; }
+	}
+
+	public class Schedule {
+		public Flight[] Arrivals { get; set; } = new Flight[0];
+		public Flight[] Departures { get; set; } = new Flight[0];
+
+		private string GetTitleCenterLine(string title) => new string(' ', (80 - title.Length) / 2) + title;
+
+		public override string ToString() {
+			var sb = new StringBuilder();
+			byte[] firstPositions = {
+				12, 36, 45, 56, 66, 73, 80
+			};
+
+			sb.AppendLine(GetTitleCenterLine("ARRIVALS"));
+			sb.AppendLine("Flight      Arriving From         Scheduled  ETA     Terminal    Belt    Status");
+			sb.AppendLine("-------------------------------------------------------------------------------");
+			sb.AppendLine(Arrivals.FlightsTableToString(firstPositions, true));
+			sb.Append("\n\n");
+
+			sb.AppendLine(GetTitleCenterLine("DEPARTURES"));
+			sb.AppendLine("Flight      Departing To          Scheduled  ETD     Terminal    Gate    Status");
+			sb.AppendLine("-------------------------------------------------------------------------------");
+			sb.AppendLine(Departures.FlightsTableToString(firstPositions, false));
+			return sb.ToString();
+		}
+	}
+
+	static class FlightArrayExtensions {
+		public static string FlightsTableToString(this Flight[] flights, byte[] firstPositions, bool isArrival, int startIndex = 0, int length = 20) {
+			var sb = new StringBuilder();
+			int endIndex = Math.Min(startIndex + length, flights.Length);
+
+			for (int i = startIndex; i < endIndex; i++) {
+				sb.AppendLine(flights[i].ToString(firstPositions, isArrival));
+			}
+
+			return sb.ToString();
+		}
 	}
 
 	public class Airport {
