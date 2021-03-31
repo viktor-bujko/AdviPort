@@ -24,7 +24,14 @@ namespace AdviPort.Plugins {
 
 		public int Invoke(object[] args) {
 
-			var loggedUser = LoginHandler.LogIn();
+			UserProfile loggedUser;
+
+			if (!Session.ActiveSession.HasLoggedUser) {
+				Console.WriteLine("Please log in to your account first");
+				loggedUser = LoginHandler.LogIn();
+			} else {
+				loggedUser = Session.ActiveSession.LoggedUser;
+			}
 
 			if (loggedUser == null) { return 1; }
 
@@ -61,7 +68,14 @@ namespace AdviPort.Plugins {
 
 		public int Invoke(object[] args) {
 
-			var loggedUser = LoginHandler.LogIn();
+			UserProfile loggedUser;
+
+			if (!Session.ActiveSession.HasLoggedUser) {
+				Console.WriteLine("Please log in to your account first");
+				loggedUser = LoginHandler.LogIn();
+			} else {
+				loggedUser = Session.ActiveSession.LoggedUser;
+			}
 
 			if (loggedUser == null) { return 1; }
 

@@ -74,24 +74,10 @@ namespace AdviPort.Plugins {
 
 		UserProfile ILoginHandler.LogIn() {
 
-			if (! Session.ActiveSession.HasLoggedUser) {
-				Console.WriteLine("Please log in to your account first");
-				var loginExitCode = Invoke(null);
-
-				if (loginExitCode != 0) { return null; }
-				Thread.Sleep(500);
-			}
-
-			// login was successful
-			Console.Clear();
-			return Session.ActiveSession.LoggedUser;
-		}
-
-		public int Invoke(object[] args) {
 			var userLogin = InputReader.ReadUserInput("Enter your username");
-			if (! UserChecker.UserExists(userLogin)) {
+			if (!UserChecker.UserExists(userLogin)) {
 				Console.Error.WriteLine($"User with login \"{userLogin}\" does not exists. Please register first.");
-				return 1;
+				return null;
 			}
 
 			var user = UserChecker.GetProfile(userLogin);
@@ -106,7 +92,7 @@ namespace AdviPort.Plugins {
 				loginSuccess = false;
 				tryAnotherAttempt = true;
 
-				if (!  string.IsNullOrWhiteSpace(userPasswd)) {
+				if (!string.IsNullOrWhiteSpace(userPasswd)) {
 					userPasswd = Encryptor.Encrypt(userPasswd);
 					loginSuccess = user.Password == userPasswd;
 
@@ -129,11 +115,20 @@ namespace AdviPort.Plugins {
 			// or when max attempts are reached without success.
 			if (!loginSuccess) {
 				Console.Error.WriteLine("Too many incorrect attempts. Please try again.");
-				return 1;
+				return null;
 			}
 
 			Console.WriteLine("Login successful.");
 			Session.ActiveSession.LoggedUser = user;
+			return user;
+		}
+
+		public int Invoke(object[] args) {
+
+			var loggedUser = ((ILoginHandler)this).LogIn();
+
+			if (loggedUser == null) { return 1; }
+
 			return 0;
 		}
 	}
