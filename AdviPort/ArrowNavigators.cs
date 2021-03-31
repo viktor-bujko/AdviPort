@@ -11,12 +11,7 @@ namespace AdviPort {
 
 	class DefaultMainPageNavigator : IMainPageNavigator {
 
-		protected TextReader InputReader { get; }
-
-		public DefaultMainPageNavigator(TextReader inputReader) {
-			InputReader = inputReader;
-		}
-
+	
 		public string NavigateOrReadInput() {
 
 			int cursor = Console.CursorTop;

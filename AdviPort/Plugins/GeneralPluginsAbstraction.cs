@@ -18,20 +18,15 @@ namespace AdviPort.Plugins {
 	interface ILoggedOffPlugin : IPlugin { }
 
 	class PluginInputReader : IUserInterfaceReader {
-		protected virtual TextReader Reader { get; }
-		protected virtual TextWriter Writer { get; }
 
-		public PluginInputReader(TextReader reader, TextWriter writer) {
-			Reader = reader;
-			Writer = writer;
-		}
+		public PluginInputReader() { }
 
 		public virtual string ReadUserInput(string initialPrompt) {
 			if (!(initialPrompt is null)) {
-				Writer.Write(initialPrompt + ": ");
+				Console.Write(initialPrompt + ": ");
 			}
 
-			var input = Reader.ReadLine();
+			var input = Console.ReadLine();
 
 			if (input is null) throw new ArgumentNullException("The input should not be null.");
 
@@ -42,17 +37,12 @@ namespace AdviPort.Plugins {
 	class ConsolePasswordReader : IUserInterfaceReader {
 
 		public static ConsolePasswordReader Instance { get; } = new ConsolePasswordReader();
-		protected virtual TextReader Reader { get; }
-		protected virtual TextWriter Writer { get; }
 
-		private ConsolePasswordReader() {
-			Reader = Console.In;
-			Writer = Console.Out;
-		}
+		private ConsolePasswordReader() { }
 
 		public string ReadUserInput(string initialPrompt) {
 			if (! (initialPrompt == null)) {
-				Writer.Write(initialPrompt + ": ");
+				Console.Write(initialPrompt + ": ");
 			}
 
 			StringBuilder sb = new StringBuilder();

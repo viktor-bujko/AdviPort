@@ -43,37 +43,33 @@ namespace AdviPort {
 	/// Main Page Handler Factory class.
 	/// </summary>
 	abstract class MainPageHandlerSelector {
-		public static IMainPageHandler SelectMainPageHandler(GeneralApplicationSettings settings, TextReader reader, TextWriter writer) {
+		public static IMainPageHandler SelectMainPageHandler(GeneralApplicationSettings settings) {
 
 			CommonMainPageHandler handler = settings.MainPageStyle switch {
-				"" => ClassicMainPageHandler.NewInstance(reader, writer),
-				"classic" => ClassicMainPageHandler.NewInstance(reader, writer),
-				"decorative" => DecorativeMainPageHandler.NewInstance(reader, writer),
-				"descriptive" => DescriptiveMainPageHandler.NewInstance(ClassicMainPageHandler.NewInstance(reader, writer)),
-				"decorative/descriptive" => DescriptiveMainPageHandler.NewInstance(DecorativeMainPageHandler.NewInstance(reader, writer)),
-				"descriptive/decorative" => DescriptiveMainPageHandler.NewInstance(DecorativeMainPageHandler.NewInstance(reader, writer)),
+				"" => ClassicMainPageHandler.Instance,
+				"classic" => ClassicMainPageHandler.Instance,
+				"decorative" => DecorativeMainPageHandler.Instance,
+				"descriptive" => DescriptiveMainPageHandler.GetInstance(ClassicMainPageHandler.Instance),
+				"decorative/descriptive" => DescriptiveMainPageHandler.GetInstance(DecorativeMainPageHandler.Instance),
+				"descriptive/decorative" => DescriptiveMainPageHandler.GetInstance(DecorativeMainPageHandler.Instance),
 				_ => null,
 			};
 
 			if (handler == null) {
 				Console.Error.WriteLine("Unsupported main page printer.");
-				handler = ClassicMainPageHandler.NewInstance(reader, writer);
+				handler = ClassicMainPageHandler.Instance;
 			}
 
 			if (! Session.ActiveSession.HasLoggedUser)
 				return handler;
 			else
-				return ShowLoggedUserMainPageHandler.NewInstance(handler);
+				return ShowLoggedUserMainPageHandler.GetInstance(handler);
 		}
 	}
 
 	abstract class CommonMainPageHandler : IMainPageHandler {
 
 		public abstract string MainPageHeader { get; }
-
-		public virtual TextReader Reader { get; }
-
-		public virtual TextWriter Writer { get; }
 
 		protected virtual IList<IPlugin> Plugins { get; set; }
 
@@ -97,10 +93,10 @@ namespace AdviPort {
 
 		public virtual string ReadUserInput(string initialPrompt) {
 			if (!(initialPrompt is null)) {
-				Writer.Write(initialPrompt + ": ");
+				Console.Write(initialPrompt + ": ");
 			}
 
-			var input = Reader.ReadLine();
+			var input = Console.ReadLine();
 
 			if (input is null) throw new ArgumentNullException("The input should not be null.");
 
@@ -142,16 +138,13 @@ namespace AdviPort {
 			return null;
 		}
 
-		protected CommonMainPageHandler(TextReader reader, TextWriter writer) {
-			Reader = reader;
-			Writer = writer;
-		}
+		protected CommonMainPageHandler() { }
 	}
 
 	class ClassicMainPageHandler : CommonMainPageHandler {
 
 		// Only a single instance of this type is expected to be needed.
-		private static ClassicMainPageHandler Instance { get; set; }
+		public static ClassicMainPageHandler Instance { get; } = new ClassicMainPageHandler();
 
 		public override string MainPageHeader => @"
  █████╗ ██████╗ ██╗   ██╗██╗██████╗  ██████╗ ██████╗ ████████╗
@@ -163,43 +156,32 @@ namespace AdviPort {
 ______________________________________________________________
 ";
 
-		//protected virtual IPlugin[] Plugins { get; set; }
-
-		private ClassicMainPageHandler(TextReader reader, TextWriter writer) : base(reader, writer) { }
-
-		public static ClassicMainPageHandler NewInstance(TextReader reader, TextWriter writer) {
-			if (Instance is null || Instance.Reader != reader || Instance.Writer != writer) {
-				// Creating new instance only if it does not exist yet or if the conditions change
-				Instance = new ClassicMainPageHandler(reader, writer);
-			}
-
-			return Instance;
-		}
+		private ClassicMainPageHandler() { }
 
 		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
-			Writer.WriteLine(MainPageHeader);
+			Console.WriteLine(MainPageHeader);
 
-			Plugins = PluginSelector.GetAvailablePlugins(settings, Reader, Writer);
+			Plugins = PluginSelector.GetAvailablePlugins(settings);
 			PrintAvailablePlugins();
 		}
 		
 		public override int PrintMainPagePluginOption(IPlugin plugin, int orderNumber) {
 			var pluginToPrint = $"{ orderNumber }) { plugin.Name }";
-			Writer.WriteLine(pluginToPrint);
+			Console.WriteLine(pluginToPrint);
 
 			return pluginToPrint.Length;
 		}
 
 		public override void PrintContentFooterSeparator(int maxPrinted) {
-			Writer.WriteLine(new string('=', maxPrinted));
-			Writer.WriteLine();
+			Console.WriteLine(new string('=', maxPrinted));
+			Console.WriteLine();
 		}
 
 	}
 
 	class DecorativeMainPageHandler : CommonMainPageHandler {
 
-		private static DecorativeMainPageHandler Instance { get; set; }
+		public static DecorativeMainPageHandler Instance { get; } = new DecorativeMainPageHandler();
 
 		private readonly int freeSpaces;
 		private readonly PageDecoration sideDecoration, planeDecoration;
@@ -220,29 +202,16 @@ ______________________________________________________________
 ______________________________________________________________________________________________________________
 ";
 
-		//protected override IPlugin[] Plugins { get; set; }
-
-		private DecorativeMainPageHandler(TextReader reader, TextWriter writer) : base(reader, writer) {
+		private DecorativeMainPageHandler() {
 			freeSpaces = 70;
 			sideDecoration = new PageDecoration(@"..\..\..\decorations\tower_decoration.txt");
 			planeDecoration = new PageDecoration(@"..\..\..\decorations\airplane_decoration.txt");
 		}
 
-		public static DecorativeMainPageHandler NewInstance(TextReader reader, TextWriter writer) {
-			if (Instance is null || Instance.Reader != reader || Instance.Writer != writer) {
-				// Creating new instance only if it does not exist yet or if the conditions change
-				Instance = new DecorativeMainPageHandler(reader, writer);
-			}
-
-			return Instance;
-		}
-
 		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
-			Console.BackgroundColor = ConsoleColor.Blue;
-			Writer.WriteLine(MainPageHeader);
-			Console.BackgroundColor = ConsoleColor.Black;
-			planeDecoration.Print(Writer, 2, title: "«« MAIN MENU »»");
-			Plugins = PluginSelector.GetAvailablePlugins(settings, Reader, Writer);
+			Console.WriteLine(MainPageHeader);
+			planeDecoration.Print(2, title: "«« MAIN MENU »»");
+			Plugins = PluginSelector.GetAvailablePlugins(settings);
 			PrintAvailablePlugins();
 		}
 
@@ -261,7 +230,7 @@ ________________________________________________________________________________
 			// Print the rest of the side decoration
 			if (sideDecoration.Exists) {
 				while (++sideDecoration.LastUsedIndex < sideDecoration.RowsSize) {
-					Writer.WriteLine(new string(' ', freeSpaces) + sideDecoration[sideDecoration.LastUsedIndex]);
+					Console.WriteLine(new string(' ', freeSpaces) + sideDecoration[sideDecoration.LastUsedIndex]);
 				}
 			}
 			//if (writer == Console.Out) { Console.BackgroundColor = consoleBackupColor; }
@@ -278,14 +247,14 @@ ________________________________________________________________________________
 			}
 
 			pluginToPrint += decorationImg;
-			Writer.WriteLine(pluginToPrint);
+			Console.WriteLine(pluginToPrint);
 
 			return pluginToPrint.Length;
 		}
 
 		public override void PrintContentFooterSeparator(int maxPrinted) {
-			Writer.WriteLine(new string('~', maxPrinted));
-			Writer.WriteLine();
+			Console.WriteLine(new string('~', maxPrinted));
+			Console.WriteLine();
 		}
 
 		public override string ReadUserInput(string initialPrompt) {
@@ -303,11 +272,11 @@ ________________________________________________________________________________
 
 		public override string MainPageHeader => BaseMainPageHandler.MainPageHeader;
 
-		private DescriptiveMainPageHandler(CommonMainPageHandler baseHandler) : base(baseHandler.Reader, baseHandler.Writer) {
+		private DescriptiveMainPageHandler(CommonMainPageHandler baseHandler) {
 			BaseMainPageHandler = baseHandler;
 		}
 
-		public static DescriptiveMainPageHandler NewInstance(CommonMainPageHandler baseHandler) {
+		public static DescriptiveMainPageHandler GetInstance(CommonMainPageHandler baseHandler) {
 			if (Instance == null) {
 				Instance = new DescriptiveMainPageHandler(baseHandler);
 			}
@@ -316,8 +285,8 @@ ________________________________________________________________________________
 		}
 
 		public override void PrintMainPageContent(GeneralApplicationSettings settings) {
-			Writer.WriteLine(MainPageHeader);
-			Plugins = PluginSelector.GetAvailablePlugins(settings, Reader, Writer);
+			Console.WriteLine(MainPageHeader);
+			Plugins = PluginSelector.GetAvailablePlugins(settings);
 
 			var maxPrinted = int.MinValue;
 
@@ -332,7 +301,7 @@ ________________________________________________________________________________
 		public override int PrintMainPagePluginOption(IPlugin plugin, int orderNumber) {
 			int printedLenght = BaseMainPageHandler.PrintMainPagePluginOption(plugin, orderNumber);
 			string description = $"   \u2192 { plugin.Description }\n";
-			Writer.WriteLine(description);
+			Console.WriteLine(description);
 
 			return Math.Max(printedLenght, description.Length);
 		}
@@ -347,13 +316,13 @@ ________________________________________________________________________________
 		private static ShowLoggedUserMainPageHandler Instance { get; set; }
 		private CommonMainPageHandler BaseHandler { get; }
 
-		private ShowLoggedUserMainPageHandler(CommonMainPageHandler baseHandler) : base(baseHandler.Reader, baseHandler.Writer) {
+		private ShowLoggedUserMainPageHandler(CommonMainPageHandler baseHandler) {
 			BaseHandler = baseHandler;
 		}
 
 		public override string MainPageHeader => BaseHandler.MainPageHeader;
 
-		public static ShowLoggedUserMainPageHandler NewInstance(CommonMainPageHandler baseHandler) {
+		public static ShowLoggedUserMainPageHandler GetInstance(CommonMainPageHandler baseHandler) {
 			if (Instance == null || Instance.BaseHandler != baseHandler) {
 				Instance = new ShowLoggedUserMainPageHandler(baseHandler);
 			}
@@ -365,12 +334,12 @@ ________________________________________________________________________________
 
 			if (! Session.ActiveSession.HasLoggedUser) throw new ArgumentException("This main page handler should not be used without logged user.");
 
-			Writer.WriteLine(MainPageHeader);
+			Console.WriteLine(MainPageHeader);
 
 			var loggedUser = Session.ActiveSession.LoggedUser;
-			Writer.WriteLine($"Welcome back, {loggedUser.UserName}\n");
+			Console.WriteLine($"Welcome back, {loggedUser.UserName}\n");
 
-			Plugins = PluginSelector.GetAvailablePlugins(settings, Reader, Writer);
+			Plugins = PluginSelector.GetAvailablePlugins(settings);
 
 			if (Plugins.Contains(LoginPlugin.Instance)) {
 				Plugins.Remove(LoginPlugin.Instance);
