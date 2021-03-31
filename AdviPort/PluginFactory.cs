@@ -8,11 +8,11 @@ using AdviPort.Plugins;
 namespace AdviPort {
 
 	internal static class PluginSelector {
-		internal static IPlugin SearchPluginByName(string pluginName, TextReader reader, TextWriter writer) {
+		internal static IPlugin SearchPluginByName(string pluginName) {
 
 			FileSystemProfileDB appDatabase = new FileSystemProfileDB();
 			FileSystemProfileDBWriter profileWriter = new FileSystemProfileDBWriter();
-			PluginInputReader inputReader = new PluginInputReader(reader, writer);
+			PluginInputReader inputReader = new PluginInputReader();
 
 			IPlugin plugin = pluginName switch {
 				"register" => new RegisterAPIKeyPlugin(
@@ -50,12 +50,12 @@ namespace AdviPort {
 			return plugin;
 		}
 
-		public static IList<IPlugin> GetAvailablePlugins(GeneralApplicationSettings settings, TextReader reader, TextWriter writer) {
+		public static IList<IPlugin> GetAvailablePlugins(GeneralApplicationSettings settings) {
 
 			List<IPlugin> plugins = new List<IPlugin>(settings.AvailablePlugins.Length);
 
 			foreach (string pluginName in settings.AvailablePlugins) {
-				var plugin = SearchPluginByName(pluginName, reader, writer);
+				var plugin = SearchPluginByName(pluginName);
 				if (plugin is null) continue;
 
 				if (!Session.ActiveSession.HasLoggedUser && plugin is ILoggedInOnlyPlugin) continue;

@@ -11,18 +11,14 @@ namespace AdviPort {
 	class Program {
 		static void Main(string[] args) {
 
-			var reader = Console.In;
-			var writer = Console.Out;
 			bool exit = false;
 
 			while (! exit) {
 				var settings = GeneralApplicationSettings.GetAppSettings();
 
-				if (writer.Equals(Console.Out)) {
-					Console.WindowWidth = 112;
-				}
+				Console.WindowWidth = 112;
 
-				IMainPageHandler mainHandler = MainPageHandlerSelector.SelectMainPageHandler(settings, reader, writer);
+				IMainPageHandler mainHandler = MainPageHandlerSelector.SelectMainPageHandler(settings);
 
 				mainHandler.PrintMainPageContent(settings);
 
@@ -48,7 +44,7 @@ namespace AdviPort {
 					Console.Error.WriteLine("An error occured during the execution of chosen plugin.");
 				}
 
-				writer.WriteLine("Press any key to continue.");
+				Console.WriteLine("Press any key to continue.");
 				Console.ReadKey();
 				Console.Clear();
 			}
@@ -124,7 +120,6 @@ namespace AdviPort {
 				profilesPath = current + Path.DirectorySeparatorChar + "profiles";
 				Directory.CreateDirectory(profilesPath);
 				Console.Error.WriteLine($"TO LOG: Created a new directory: {profilesPath}");
-				// TODO: Log the creation of given directory.
 			}
 
 			return profilesPath;

@@ -58,7 +58,7 @@ namespace AdviPort {
 			} catch { /*throw new ArgumentException("The file with given fileName does not exist.");*/ }
 		}
 
-		public void Print(TextWriter writer, int objectCount = 1, int spaces = 15, string title = "") {
+		public void Print(int objectCount = 1, int spaces = 15, string title = "") {
 
 			if (spaces < 0 || objectCount < 0) {
 				throw new ArgumentException($"Both { nameof(objectCount) } and { nameof(spaces) } parameters can't be negative.");
@@ -73,14 +73,14 @@ namespace AdviPort {
 			for (int row = 0; row < RowsSize; row++) {
 				int lineCount = objectCount;
 				while (lineCount > 0) {
-					writer.Write(Decoration[row]);
-					writer.Write(new string(' ', MaxWidth - Decoration[row].Length));
+					Console.Write(Decoration[row]);
+					Console.Write(new string(' ', MaxWidth - Decoration[row].Length));
 					// Condition will place a non-empty title in the center between TWO decoration 
 					if (objectCount == 2 && row == RowsSize / 2 && !string.IsNullOrEmpty(title)) {
-						writer.Write(new string(' ', spaces / 2));
-						writer.Write(title);
+						Console.Write(new string(' ', spaces / 2));
+						Console.Write(title);
 						titlePadding = 0;
-						writer.Write(new string(' ', spaces / 2));
+						Console.Write(new string(' ', spaces / 2));
 					}
 					if (--lineCount > 0) {
 						if (!string.IsNullOrEmpty(title) && titlePadding == 0) {
@@ -88,10 +88,10 @@ namespace AdviPort {
 							title = "";
 							continue;
 						}
-						writer.Write(new string(' ', spaces + titlePadding));
+						Console.Write(new string(' ', spaces + titlePadding));
 					}
 				}
-				writer.WriteLine();
+				Console.WriteLine();
 			}
 		}
 
