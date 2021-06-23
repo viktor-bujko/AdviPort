@@ -39,7 +39,7 @@ namespace AdviPort.Plugins {
 			ProfileCreator = userDBHandler;
 		}
 
-		public int Invoke(object[] args) {
+		public int Invoke() {
 
 			var userName = InputReader.ReadUserInput("Please enter a name you want to register");
 

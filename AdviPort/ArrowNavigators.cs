@@ -13,7 +13,7 @@ namespace AdviPort {
 
 		private int cursorTop;
 		private int maxPlugins;
-		private string message = "Please enter your choice: ";
+		private readonly string message = "Please enter your choice: ";
 
 		public string NavigateOrReadInput(int maxPlugins) {
 
@@ -23,14 +23,14 @@ namespace AdviPort {
 			string resultInput;
 
 			do {
+				Console.CursorTop = cursorTop;
 				Console.Write(message);
 
-				if (textReadState) {
-					resultInput = ReadInput();
-				} else {
-					resultInput = Navigate(0);
-				}
-			} while (resultInput == null);
+				if (textReadState) { resultInput = ReadInput(); }
+				else { resultInput = Navigate(0); }
+
+				resultInput = resultInput.Trim();
+			} while (resultInput == null || resultInput.Length == 0);
 
 			return resultInput;
 		}

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AdviPort.ResponseObjects {
 
+	// https://rapidapi.com/aerodatabox/api/aerodatabox/
 	public class Aircraft {
 		public string Model { get; set; }
 		public string Reg { get; set; }
@@ -34,7 +36,7 @@ namespace AdviPort.ResponseObjects {
 		public string Number { get; set; }
 		public string Status { get; set; }
 
-		public string ToString(byte[] cursorPositions, bool isArrival) {
+		public string BuildFlightString(byte[] cursorPositions, bool isArrival) {
 			const string unknown = "------";
 			StringBuilder sb = new StringBuilder();
 			DateTime localTime, scheduledTime;
@@ -57,6 +59,7 @@ namespace AdviPort.ResponseObjects {
 			};
 
 			if (cursorPositions == null) {
+				cursorPositions = new byte[7];
 				Array.Fill<byte>(cursorPositions, 10);
 			}
 
@@ -101,7 +104,10 @@ namespace AdviPort.ResponseObjects {
 		public Flight[] Arrivals { get; set; } = new Flight[0];
 		public Flight[] Departures { get; set; } = new Flight[0];
 
-		private string GetTitleCenterLine(string title) => new string(' ', (80 - title.Length) / 2) + title;
+		private string GetTitleCenterLine(string title) {
+			const int windowWidth = 80;
+			return new string(' ', (windowWidth - title.Length) / 2) + title;
+		}
 
 		public override string ToString() {
 			var sb = new StringBuilder();
@@ -129,7 +135,7 @@ namespace AdviPort.ResponseObjects {
 			int endIndex = Math.Min(startIndex + length, flights.Length);
 
 			for (int i = startIndex; i < endIndex; i++) {
-				sb.AppendLine(flights[i].ToString(firstPositions, isArrival));
+				sb.AppendLine(flights[i].BuildFlightString(firstPositions, isArrival));
 			}
 
 			return sb.ToString();
@@ -148,6 +154,77 @@ namespace AdviPort.ResponseObjects {
 		public Continent Continent { get; set; }
 		public string TimeZone { get; set; }
 		public Urls Urls { get; set; }
+
+		public string BuildAirportInfoTable(Runway[] runways, bool includeRWYs) {
+			var sb = new StringBuilder();
+			string	lat = Location.Lat > 0 ? "N " : "S ",
+					lon = Location.Lon > 0 ? "E " : "W ";
+
+			string[] content = {
+				$"ICAO / IATA: {ICAO} / {IATA}",
+				$"Airport Name: {FullName} / {ShortName}",
+				$"Country: {Country.Name} ({Country.Code})",
+				$"Location:",
+				'\t' + lat + Math.Abs(Location.Lat).ToString(),
+				'\t' + lon + Math.Abs(Location.Lon).ToString(),
+				$"Airport urls:",
+				'\t' + Urls.WebSite,
+				'\t' + Urls.Wikipedia,
+				'\t' + Urls.GoogleMaps,
+				'\t' + Urls.Twitter
+			};
+
+			var maxLength = content.Max(info => info.Length);
+			string vLine = "| ";
+			string hLine = new string('_', maxLength + vLine.Length);
+
+			sb.AppendLine(hLine);
+			foreach(var info in content) {
+				sb.AppendLine(vLine + info);
+			}
+
+			if (!includeRWYs) {
+				sb.AppendLine(hLine);
+				return sb.ToString();
+			}
+			
+			sb.AppendLine(vLine + "Runways:");
+			foreach (var runway in runways) {
+				sb.AppendLine($"{vLine}	Runway: {runway.Name}");
+				sb.AppendLine($"{vLine}		True Heading: {runway.TrueHDG}");
+				sb.AppendLine($"{vLine}		Runway Surface: {runway.Surface}");
+				sb.AppendLine($"{vLine}		Length: {runway.Length.Meter} meters ({runway.Length.Feet} feet)");
+				sb.AppendLine($"{vLine}		Width: {runway.Width.Meter} meters ({runway.Width.Feet} feet)");
+				sb.AppendLine($"{vLine}	_______________");
+			}
+			sb.AppendLine(hLine);
+
+			return sb.ToString();
+		}
+	}
+
+	public class Runway {
+		public string Name { get; set; }
+		public float TrueHDG { get; set; }
+		public string Surface { get; set; }
+		public bool IsClosed { get; set; }
+		public bool HasLighting { get; set; }
+		public Length Length { get; set; }
+		public Width Width { get; set; }
+	}
+
+	public class Length {
+		public double Meter { get; set; }
+		public double Mile { get; set; }
+		public double NM { get; set; }
+		public double Feet { get; set; }
+	}
+
+	public class Width {
+		public double Meter { get; set; }
+		public double Mile { get; set; }
+		public double NM { get; set; }
+		public double Feet { get; set; }
 	}
 
 	class RapidAPIAirportREST {

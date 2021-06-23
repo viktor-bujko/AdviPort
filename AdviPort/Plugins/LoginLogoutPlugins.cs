@@ -91,7 +91,7 @@ namespace AdviPort.Plugins {
 			return user;
 		}
 
-		public int Invoke(object[] args) {
+		public int Invoke() {
 
 			var loggedUser = ((ILoginHandler)this).LogIn();
 
@@ -111,7 +111,7 @@ namespace AdviPort.Plugins {
 
 		private LogoutPlugin() { }
 
-		public override int Invoke(object[] args) {
+		public override int Invoke() {
 
 			((ILogoutHandler)this).LogOut();
 			return 0;
@@ -119,8 +119,9 @@ namespace AdviPort.Plugins {
 
 		void ILogoutHandler.LogOut() {
 			if (Session.ActiveSession.HasLoggedUser) {
+				var username = Session.ActiveSession.LoggedUser.UserName;
 				Session.ActiveSession.LoggedUser = null;
-				Console.WriteLine("Logged out successfully.");
+				Console.WriteLine($"{username}, you have been logged out successfully.");
 			} else {
 				Console.WriteLine("Already logged out.");
 			}

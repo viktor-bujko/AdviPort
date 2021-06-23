@@ -14,7 +14,7 @@ namespace AdviPort.Plugins {
 
 		private AboutAppPlugin() { }
 
-		public override int Invoke(object[] args) {
+		public override int Invoke() {
 			string[] paths = GeneralApplicationSettings.SearchFiles(Directory.GetCurrentDirectory(), "about.txt", requiredFiles: 1);
 
 			if (paths is null) throw new FileNotFoundException("A required file has not been found.");
@@ -38,11 +38,13 @@ namespace AdviPort.Plugins {
 
 		private ExitAppPlugin() { }
 
-		public override string Name => "Exit Application";
+		public sealed override string Name => "Exit Application";
 
-		public override string Description => "Quits the application";
+		public sealed override string Description => "Quits the application";
 
-		public override int Invoke(object[] args) {
+		public override int Invoke() {
+			if (Session.ActiveSession.HasLoggedUser) LogoutPlugin.Instance.Invoke();
+
 			Console.WriteLine("Exiting ADVIPORT application.");
 			return 0;
 		}

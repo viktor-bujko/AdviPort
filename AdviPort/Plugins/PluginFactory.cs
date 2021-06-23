@@ -43,9 +43,9 @@ namespace AdviPort {
 					new AeroDataBoxProvider(),
 					appDatabase
 				),
-				"search_by_flight" => new SearchByFlightPlugin(),
+				"search_by_flight" => new SearchByFlightPlugin(inputReader, new AeroDataBoxProvider()),
 				"save_flight_info" => new SaveFlightInfoPlugin(),
-				"airport_info" => new AirportInfoPlugin(inputReader, appDatabase),
+				"airport_info" => new AirportInfoPlugin(inputReader, new AeroDataBoxProvider(), new AeroDataBoxProvider()),
 				"aircraft_info" => new AircraftInfoPlugin(),
 				_ => null
 			};
@@ -53,7 +53,7 @@ namespace AdviPort {
 			return plugin;
 		}
 
-		public static IList<IPlugin> GetAvailablePlugins(GeneralApplicationSettings settings) {
+		public static IReadOnlyList<IPlugin> GetAvailablePlugins(GeneralApplicationSettings settings) {
 
 			List<IPlugin> plugins = new List<IPlugin>(settings.AvailablePlugins.Length);
 
@@ -61,7 +61,7 @@ namespace AdviPort {
 				var plugin = SearchPluginByName(pluginName);
 				if (plugin is null) continue;
 
-				if (! (plugin is LoggedInOnlyPlugin) || ! (plugin is ILoggedOffOnlyPlugin)) {
+				if (! (plugin is LoggedInOnlyPlugin && plugin is ILoggedOffOnlyPlugin)) {
 					if (!Session.ActiveSession.HasLoggedUser && plugin is LoggedInOnlyPlugin) continue;
 					if (Session.ActiveSession.HasLoggedUser && plugin is ILoggedOffOnlyPlugin) continue;
 				}
@@ -72,7 +72,7 @@ namespace AdviPort {
 			return plugins;
 		}
 
-		internal static bool TryGetPluginFromInputString(string input, IList<IPlugin> plugins, out List<IPlugin> filteredPlugins) {
+		internal static bool TryGetPluginFromInputString(string input, IReadOnlyList<IPlugin> plugins, out List<IPlugin> filteredPlugins) {
 			filteredPlugins = new List<IPlugin>();
 			input = input.ToLower();
 

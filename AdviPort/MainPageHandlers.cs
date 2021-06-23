@@ -12,7 +12,7 @@ namespace AdviPort {
 	/// of different plugins.
 	/// </summary>
 	interface IMainPagePrinter {
-		void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins);
+		int PrintMainPageContent(GeneralApplicationSettings settings);
 
 		int PrintMainPagePluginOption(IPlugin plugin, int orderNumber);
 	}
@@ -60,35 +60,31 @@ namespace AdviPort {
 				handler = ClassicMainPageHandler.Instance;
 			}
 
-			if (! Session.ActiveSession.HasLoggedUser)
-				return handler;
-			else
-				return ShowLoggedUserMainPageHandler.GetInstance(handler);
+			return Session.ActiveSession.HasLoggedUser 
+						? ShowLoggedUserMainPageHandler.GetInstance(handler) 
+						: handler;
 		}
 	}
 
 	abstract class CommonMainPageHandler : IMainPageHandler {
-
 		public abstract string MainPageHeader { get; }
-
-		protected virtual IList<IPlugin> Plugins { get; set; }
-
-		public abstract void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins);
-
+		protected IReadOnlyList<IPlugin> Plugins { get; set; }
+		public abstract int PrintMainPageContent(GeneralApplicationSettings settings);
 		public abstract int PrintMainPagePluginOption(IPlugin plugin, int orderNumber);
-
 		public abstract void PrintContentFooterSeparator(int maxPrinted);
-
-		public virtual void PrintAvailablePlugins() {
+		public virtual int PrintAvailablePlugins(IEnumerable<IPlugin> plugins) {
 			int maxPrinted = int.MinValue;
 
-			for (int i = 0; i < Plugins.Count; i++) {
-				var printedLength = PrintMainPagePluginOption(Plugins[i], i + 1);
+			int itemOrderNumber = 0;
+			foreach(var plugin in plugins) {
+				var printedLength = PrintMainPagePluginOption(plugin, ++itemOrderNumber);
 
 				maxPrinted = printedLength > maxPrinted ? printedLength : maxPrinted;
 			}
 
 			PrintContentFooterSeparator(maxPrinted);
+
+			return itemOrderNumber;
 		}
 
 		public virtual string ReadUserInput(string initialPrompt) {
@@ -145,8 +141,7 @@ namespace AdviPort {
 
 		// Only a single instance of this type is expected to be needed.
 		public static ClassicMainPageHandler Instance { get; } = new ClassicMainPageHandler();
-
-		public override string MainPageHeader => @"
+		public sealed override string MainPageHeader => @"
  █████╗ ██████╗ ██╗   ██╗██╗██████╗  ██████╗ ██████╗ ████████╗
 ██╔══██╗██╔══██╗██║   ██║██║██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
 ███████║██║  ██║██║   ██║██║██████╔╝██║   ██║██████╔╝   ██║   
@@ -155,15 +150,13 @@ namespace AdviPort {
 ╚═╝  ╚═╝╚═════╝   ╚═══╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝    
 ______________________________________________________________
 ";
-
 		private ClassicMainPageHandler() { }
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
+		public override int PrintMainPageContent(GeneralApplicationSettings settings) {
 			Console.WriteLine(MainPageHeader);
 
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
-			printedPlugins = Plugins.Count;
-			PrintAvailablePlugins();
+			return PrintAvailablePlugins(Plugins);
 		}
 		
 		public override int PrintMainPagePluginOption(IPlugin plugin, int orderNumber) {
@@ -209,22 +202,22 @@ ________________________________________________________________________________
 			planeDecoration = new PageDecoration(@"..\..\..\decorations\airplane_decoration.txt");
 		}
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
+		public override int PrintMainPageContent(GeneralApplicationSettings settings) {
 			Console.WriteLine(MainPageHeader);
 			planeDecoration.Print(2, title: "«« MAIN MENU »»");
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
-			printedPlugins = Plugins.Count;
-			PrintAvailablePlugins();
+			return PrintAvailablePlugins(Plugins);
 		}
 
-		public override void PrintAvailablePlugins() {
+		public override int PrintAvailablePlugins(IEnumerable<IPlugin> plugins) {
 			//var consoleBackupColor = Console.BackgroundColor;
 			var maxPrinted = int.MinValue;
 
-			for (int i = 0; i < Plugins.Count; i++) {
+			int itemOrderNumber = 0;
+			foreach (var plugin in plugins) {
 				/*Console.BackgroundColor = (ConsoleColor)new Random().Next(1, 9);
 				/if (Console.BackgroundColor == (ConsoleColor)7) { Console.BackgroundColor++; }*/
-				 var printedLength = PrintMainPagePluginOption(Plugins[i], i + 1);
+				var printedLength = PrintMainPagePluginOption(plugin, ++itemOrderNumber);
 
 				maxPrinted = printedLength > maxPrinted ? printedLength : maxPrinted;
 			}
@@ -238,6 +231,7 @@ ________________________________________________________________________________
 			//if (writer == Console.Out) { Console.BackgroundColor = consoleBackupColor; }
 
 			PrintContentFooterSeparator(maxPrinted);
+			return itemOrderNumber;
 		}
 
 		public override int PrintMainPagePluginOption(IPlugin plugin, int orderNumber) {
@@ -270,7 +264,7 @@ ________________________________________________________________________________
 
 		private CommonMainPageHandler BaseMainPageHandler { get; }
 
-		protected override IList<IPlugin> Plugins { get; set; }
+		//protected override IList<IPlugin> Plugins { get; set; }
 
 		public override string MainPageHeader => BaseMainPageHandler.MainPageHeader;
 
@@ -286,19 +280,21 @@ ________________________________________________________________________________
 			return Instance;
 		}
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
+		public override int PrintMainPageContent(GeneralApplicationSettings settings) {
 			Console.WriteLine(MainPageHeader);
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
-			printedPlugins = Plugins.Count;
+			return PrintAvailablePlugins(Plugins);
 
-			var maxPrinted = int.MinValue;
+			/*var maxPrinted = int.MinValue;
 
-			for (int i = 0; i < Plugins.Count; i++) {
-				var printedLength = PrintMainPagePluginOption(Plugins[i], i + 1);
+			int orderNumber = 0;
+			foreach (var plugin in Plugins) {
+				var printedLength = PrintMainPagePluginOption(plugin, ++orderNumber);
 
 				maxPrinted = printedLength > maxPrinted ? printedLength : maxPrinted;
 			}
-			PrintContentFooterSeparator(maxPrinted);
+
+			PrintContentFooterSeparator(maxPrinted);*/
 		}
 
 		public override int PrintMainPagePluginOption(IPlugin plugin, int orderNumber) {
@@ -318,7 +314,6 @@ ________________________________________________________________________________
 
 		private static ShowLoggedUserMainPageHandler Instance { get; set; }
 		private CommonMainPageHandler BaseHandler { get; }
-
 		private ShowLoggedUserMainPageHandler(CommonMainPageHandler baseHandler) {
 			BaseHandler = baseHandler;
 		}
@@ -333,7 +328,7 @@ ________________________________________________________________________________
 			return Instance;
 		}
 
-		public override void PrintMainPageContent(GeneralApplicationSettings settings, out int printedPlugins) {
+		public override int PrintMainPageContent(GeneralApplicationSettings settings) {
 
 			if (! Session.ActiveSession.HasLoggedUser) throw new ArgumentException("This main page handler should not be used without logged user.");
 
@@ -343,13 +338,12 @@ ________________________________________________________________________________
 			Console.WriteLine($"Welcome back, {loggedUser.UserName}\n");
 
 			Plugins = PluginSelector.GetAvailablePlugins(settings);
-			printedPlugins = Plugins.Count;
 
-			if (Plugins.Contains(LoginPlugin.Instance)) {
+			/*if (Plugins.Contains(LoginPlugin.Instance)) {
 				Plugins.Remove(LoginPlugin.Instance);
-			}
+			}*/
 
-			PrintAvailablePlugins();
+			return PrintAvailablePlugins(Plugins);
 		}
 
 		public override int PrintMainPagePluginOption(IPlugin plugin, int orderNumber) => BaseHandler.PrintMainPagePluginOption(plugin, orderNumber);

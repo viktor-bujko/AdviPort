@@ -21,10 +21,9 @@ namespace AdviPort {
 				IMainPageHandler mainHandler = MainPageHandlerSelector.SelectMainPageHandler(settings);
 				IMainPageNavigator navigator = new DefaultMainPageNavigator();
 
+				int printedCount = mainHandler.PrintMainPageContent(settings);
 
-				mainHandler.PrintMainPageContent(settings, out int printedPlugins);
-
-				var input = navigator.NavigateOrReadInput(printedPlugins);
+				var input = navigator.NavigateOrReadInput(printedCount);
 
 				IExecutablePlugin chosenPlugin = mainHandler.HandlePluginChoice(input);
 
@@ -36,7 +35,7 @@ namespace AdviPort {
 
 				Console.Clear();
 
-				int exitCode = chosenPlugin.Invoke(args);
+				int exitCode = chosenPlugin.Invoke();
 
 				if (chosenPlugin is ExitAppPlugin) {
 					exit = exitCode == 0;

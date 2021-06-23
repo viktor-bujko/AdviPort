@@ -13,7 +13,8 @@ namespace AdviPort.Plugins {
 		protected IUserProfileWriter ProfileWriter { get; }
 		private IAirportProvider AirportFinder { get; }
 
-		private AddFavouriteAirportPlugin(IUserInterfaceReader inputReader, IAirportProvider airportFinder, IUserChecker userChecker, IUserProfileWriter profileWriter) : base(LoginPlugin.GetInstance(inputReader, userChecker)) {
+		private AddFavouriteAirportPlugin(IUserInterfaceReader inputReader, IAirportProvider airportFinder, IUserChecker userChecker, IUserProfileWriter profileWriter) 
+			: base(LoginPlugin.GetInstance(inputReader, userChecker)) {
 			AirportFinder = airportFinder;
 			InputReader = inputReader;
 			ProfileWriter = profileWriter;
@@ -27,18 +28,15 @@ namespace AdviPort.Plugins {
 			return Instance;
 		}
 
-		public override int Invoke(object[] args) {
+		public override int Invoke() {
 
-			UserProfile loggedUser;
+			int returnValue = base.Invoke();
 
-			if (!Session.ActiveSession.HasLoggedUser) {
-				Console.WriteLine("Please log in to your account first");
-				loggedUser = LoginHandler.LogIn();
-			} else {
-				loggedUser = Session.ActiveSession.LoggedUser;
-			}
+			if (returnValue != 0) return returnValue;
 
-			if (loggedUser == null) { return 1; }
+			// login is successful
+
+			var loggedUser = Session.ActiveSession.LoggedUser;
 
 			var airportIcaoCode = InputReader.ReadUserInput($"{loggedUser.UserName}, please enter the ICAO code of your favourite airport");
 
@@ -49,7 +47,9 @@ namespace AdviPort.Plugins {
 				return 0;
 			}
 
-			var airport = AirportFinder.GetAirportByICAO(airportIcaoCode);
+			var airportTask = AirportFinder.GetAirportByICAOAsync<ResponseObjects.Airport>(airportIcaoCode);
+
+			var airport = airportTask.Result;
 
 			loggedUser.FavouriteAirports.Add(airport.ICAO.ToLower(), airport);
 
@@ -80,9 +80,9 @@ namespace AdviPort.Plugins {
 			return Instance;
 		}
 
-		public override int Invoke(object[] args) {
+		public override int Invoke() {
 
-			int baseRetVal = base.Invoke(args);
+			int baseRetVal = base.Invoke();
 
 			if (baseRetVal != 0) { return baseRetVal; }
 
@@ -125,14 +125,16 @@ namespace AdviPort.Plugins {
 			return Instance;
 		}
 
-		public override int Invoke(object[] args) {
+		public override int Invoke() {
 
-			int baseRetVal = base.Invoke(args);
+			int baseRetVal = base.Invoke();
 			if (baseRetVal != 0) { return baseRetVal; }
 
 			var airportIcao = InputReader.ReadUserInput("Please enter the ICAO code of the airport to get the schedule from");
 
-			var schedule = ScheduleProvider.GetAirportSchedule(airportIcao);
+			var scheduleTask = ScheduleProvider.GetAirportScheduleAsync<ResponseObjects.Schedule>(airportIcao);
+
+			var schedule = scheduleTask.Result;
 
 			Console.WriteLine(schedule);
 

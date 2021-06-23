@@ -5,7 +5,7 @@ using System.Text;
 
 namespace AdviPort.Plugins {
 	interface IExecutablePlugin {
-		int Invoke(object[] args);
+		int Invoke();
 	}
 
 	interface IPlugin : IExecutablePlugin {
@@ -26,7 +26,7 @@ namespace AdviPort.Plugins {
 
 		protected LoggedInOnlyPlugin() { }
 
-		public virtual int Invoke(object[] args) {
+		public virtual int Invoke() {
 			UserProfile loggedUser;
 			if (!Session.ActiveSession.HasLoggedUser) {
 				Console.WriteLine("Please log in to your account first");
