@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using AdviPort.ResponseObjects;
+using AdviPort.UI;
 
 namespace AdviPort.Plugins {
 
+	/// <summary>
+	/// Adds an existing airport info to logged-in user's favourites airports.
+	/// </summary>
 	class AddFavouriteAirportPlugin : LoggedInOnlyPlugin {
 
 		private static AddFavouriteAirportPlugin Instance { get; set; }
@@ -28,6 +34,11 @@ namespace AdviPort.Plugins {
 			return Instance;
 		}
 
+		/// <summary>
+		/// <inheritdoc/>
+		/// Adds an airport to currently logged-in user's favourites.
+		/// </summary>
+		/// <returns><inheritdoc/></returns>
 		public override int Invoke() {
 
 			int returnValue = base.Invoke();
@@ -47,7 +58,15 @@ namespace AdviPort.Plugins {
 				return 0;
 			}
 
-			var airportTask = AirportFinder.GetAirportByICAOAsync<ResponseObjects.Airport>(airportIcaoCode);
+			var airportTask = AirportFinder.GetAirportByICAOAsync<Airport>(airportIcaoCode);
+
+			try {
+				airportTask.Wait(); // Avoiding exception in Result property call
+			} catch (AggregateException) {
+				return 1;
+			}
+
+			if (!airportTask.IsCompletedSuccessfully) return 1;
 
 			var airport = airportTask.Result;
 
@@ -59,8 +78,10 @@ namespace AdviPort.Plugins {
 		}
 	}
 
+	/// <summary>
+	/// Removes an existing airport info to logged-in user's favourites airports.
+	/// </summary>
 	class RemoveFavouriteAirportPlugin : LoggedInOnlyPlugin {
-
 		private static RemoveFavouriteAirportPlugin Instance { get; set; }
 		public override string Name => "Remove a favourite airport";
 		public override string Description => "Removes an airport from current account's bookmarks";
@@ -80,6 +101,11 @@ namespace AdviPort.Plugins {
 			return Instance;
 		}
 
+		/// <summary>
+		/// <inheritdoc/>
+		/// Removes the airport from currently logged-in user's favourites.
+		/// </summary>
+		/// <returns><inheritdoc/></returns>
 		public override int Invoke() {
 
 			int baseRetVal = base.Invoke();
@@ -99,47 +125,5 @@ namespace AdviPort.Plugins {
 			
 			return ProfileWriter.WriteUserProfile(loggedUser);
 		}
-	}
-
-	class PrintScheduleAirport : LoggedInOnlyPlugin {
-
-		private static PrintScheduleAirport Instance { get; set; }
-
-		public override string Name => "Print the flights schedule of a selected airport";
-
-		public override string Description => "Prints the flights schedule for selected airport";
-
-		private IUserInterfaceReader InputReader { get; }
-		private IAirportScheduleProvider ScheduleProvider { get; }
-
-		private PrintScheduleAirport(IUserInterfaceReader inputReader, IAirportScheduleProvider scheduleProvider, IUserChecker userChecker) : base(LoginPlugin.GetInstance(inputReader, userChecker)) {
-			InputReader = inputReader;
-			ScheduleProvider = scheduleProvider;
-		}
-
-		public static PrintScheduleAirport GetInstance(IUserInterfaceReader inputReader, IAirportScheduleProvider scheduleProvider, IUserChecker userChecker) {
-			if (Instance == null) {
-				Instance = new PrintScheduleAirport(inputReader, scheduleProvider, userChecker);
-			}
-
-			return Instance;
-		}
-
-		public override int Invoke() {
-
-			int baseRetVal = base.Invoke();
-			if (baseRetVal != 0) { return baseRetVal; }
-
-			var airportIcao = InputReader.ReadUserInput("Please enter the ICAO code of the airport to get the schedule from");
-
-			var scheduleTask = ScheduleProvider.GetAirportScheduleAsync<ResponseObjects.Schedule>(airportIcao);
-
-			var schedule = scheduleTask.Result;
-
-			Console.WriteLine(schedule);
-
-			return 0;
-		}
-
 	}
 }

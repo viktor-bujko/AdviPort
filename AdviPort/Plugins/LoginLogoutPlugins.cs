@@ -2,16 +2,27 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using AdviPort.UI;
 
 namespace AdviPort.Plugins {
+
+	/// <summary>
+	/// Provides login control method.
+	/// </summary>
 	interface ILoginHandler {
 		public UserProfile LogIn();
 	}
 
+	/// <summary>
+	/// Provides logout control method.
+	/// </summary>
 	interface ILogoutHandler {
 		void LogOut();
 	}
 
+	/// <summary>
+	/// Plugin which controls the login process.
+	/// </summary>
 	class LoginPlugin : ILoginHandler, ILoggedOffOnlyPlugin {
 		public string Name => "Login to the application";
 
@@ -40,6 +51,10 @@ namespace AdviPort.Plugins {
 			return Instance;
 		}
 
+		/// <summary>
+		/// <inheritdoc cref="LoginPlugin"/>
+		/// </summary>
+		/// <returns>The instance of user profile of user who logged-in.</returns>
 		UserProfile ILoginHandler.LogIn() {
 
 			var userLogin = InputReader.ReadUserInput("Enter your username");
@@ -49,7 +64,7 @@ namespace AdviPort.Plugins {
 			}
 
 			var user = UserChecker.GetProfile(userLogin);
-			int passwordAttempts = 5;
+			int passwordAttempts = 5;	// initial value of maximum attempts
 			bool loginSuccess;
 			bool tryAnotherAttempt;
 			string passwordAttemptsWarning = "";
@@ -91,6 +106,10 @@ namespace AdviPort.Plugins {
 			return user;
 		}
 
+		/// <summary>
+		/// <inheritdoc/>
+		/// </summary>
+		/// <returns><inheritdoc/></returns>
 		public int Invoke() {
 
 			var loggedUser = ((ILoginHandler)this).LogIn();
@@ -101,6 +120,9 @@ namespace AdviPort.Plugins {
 		}
 	}
 
+	/// <summary>
+	/// Plugin which controls logout process.
+	/// </summary>
 	class LogoutPlugin : LoggedInOnlyPlugin, ILogoutHandler {
 
 		internal static LogoutPlugin Instance { get; } = new LogoutPlugin();
@@ -111,12 +133,19 @@ namespace AdviPort.Plugins {
 
 		private LogoutPlugin() { }
 
+		/// <summary>
+		/// <inheritdoc/>
+		/// </summary>
+		/// <returns><inheritdoc/></returns>
 		public override int Invoke() {
 
 			((ILogoutHandler)this).LogOut();
 			return 0;
 		}
 
+		/// <summary>
+		/// Logs out currently logged user.
+		/// </summary>
 		void ILogoutHandler.LogOut() {
 			if (Session.ActiveSession.HasLoggedUser) {
 				var username = Session.ActiveSession.LoggedUser.UserName;

@@ -2,17 +2,41 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using AdviPort.UI;
 
 namespace AdviPort.Plugins {
+
+	/// <summary>
+	/// Represents an application extension, which has an invokable action.
+	/// </summary>
 	interface IExecutablePlugin {
+		/// <summary>
+		/// Main action of the plugin. This method represents the main method of
+		/// any class which implements <see cref="IExecutablePlugin"/>. 
+		/// </summary>
+		/// <returns>Exit code of the action. Any non-zero value represents an error.</returns>
 		int Invoke();
 	}
 
+	/// <summary>
+	/// Extension of an <see cref="IExecutablePlugin"/>, which provides its name and description.
+	/// </summary>
 	interface IPlugin : IExecutablePlugin {
 		string Name { get; }
 		string Description { get; }
 	}
 
+	/// <summary>
+	/// Extension of <see cref="IPlugin"/> used to describe a plugin available only 
+	/// when no user is logged into the application.
+	/// </summary>
+	interface ILoggedOffOnlyPlugin : IPlugin { }
+
+	/// <summary>
+	/// Extension of <see cref="IPlugin"/> used to describe a plugin available only 
+	/// when a user is logged into the application. This class also provides a default
+	/// implementation which ensures a user is logged in.
+	/// </summary>
 	abstract class LoggedInOnlyPlugin : IPlugin {
 		public abstract string Name { get; }
 
@@ -41,66 +65,137 @@ namespace AdviPort.Plugins {
 		}
 	}
 
-	interface ILoggedOffOnlyPlugin : IPlugin { }
+	/// <summary>
+	/// Provides methods which search, retrieve and select different plugins
+	/// based on the input parameters. This class assumes fixed mapping of 
+	/// plugin names to their actual implementation.
+	/// </summary>
+	internal static class PluginSelector {
 
-	class PluginInputReader : IUserInterfaceReader {
+		/// <summary>
+		/// Chooses a plugin implementation based on the plugin mapping name.
+		/// </summary>
+		/// <param name="pluginName">The name of the plugin used in the mapping.</param>
+		/// <returns>An instance of <see cref="IPlugin"/> or <code>null</code> if no 
+		/// suitable plugin implementation was found for given <paramref name="pluginName"/></returns>
+		internal static IPlugin GetPluginByName(string pluginName) {
 
-		public PluginInputReader() { }
+			FileSystemProfileDB appDatabase = new FileSystemProfileDB();
+			FileSystemProfileDBWriter profileWriter = new FileSystemProfileDBWriter();
+			UserInputReader inputReader = new UserInputReader();
+			AeroDataBoxProvider infoProvider = new AeroDataBoxProvider();
 
-		public virtual string ReadUserInput(string initialPrompt) {
-			if (!(initialPrompt is null)) {
-				Console.Write(initialPrompt + ": ");
-			}
+			IPlugin plugin = pluginName switch {
+				"about" => AboutAppPlugin.Instance,
+				"exit" => ExitAppPlugin.Instance,
+				"register" => RegisterProfilePlugin.GetInstance(
+					inputReader,
+					appDatabase,
+					DefaultUserPasswordCreator.GetInstance(inputReader),
+					appDatabase
+				),
+				"login" => LoginPlugin.GetInstance(
+					inputReader,
+					appDatabase
+				),
+				"logout" => LogoutPlugin.Instance,
+				"add_favourite" => AddFavouriteAirportPlugin.GetInstance(
+					inputReader,
+					infoProvider,
+					appDatabase,
+					profileWriter
+				),
+				"remove_favourite" => RemoveFavouriteAirportPlugin.GetInstance(
+					inputReader,
+					appDatabase,
+					profileWriter
+				),
+				"print_schedule" => PrintScheduleAirport.GetInstance(
+					inputReader,
+					infoProvider,
+					appDatabase
+				),
+				"search_by_flight" => new SearchFlightPlugin(
+					inputReader,
+					infoProvider,
+					profileWriter
+				),
+				"change_mainpage" => new ChangeMainPageStylePlugin(
+					inputReader,
+					appDatabase,
+					profileWriter
+				),
+				"airport_info" => new AirportInfoPlugin(
+					inputReader,
+					infoProvider,
+					infoProvider
+				),
+				_ => null
+			};
 
-			var input = Console.ReadLine();
-
-			if (input is null) throw new ArgumentNullException("The input should not be null.");
-
-			return input.Trim();
+			return plugin;
 		}
-	}
 
-	class ConsolePasswordReader : IUserInterfaceReader {
+		/// <summary>
+		/// Retrieves and filters 
+		/// </summary>
+		/// <param name="settings"></param>
+		/// <returns></returns>
+		public static IReadOnlyList<IPlugin> GetAvailablePlugins(GeneralApplicationSettings settings, Predicate<IPlugin> pluginFilter) {
 
-		public static ConsolePasswordReader Instance { get; } = new ConsolePasswordReader();
+			List<IPlugin> result = new List<IPlugin>(settings.AvailablePlugins.Length);
 
-		private ConsolePasswordReader() { }
+			foreach (string pluginName in settings.AvailablePlugins) {
+				var plugin = GetPluginByName(pluginName);
+				if (plugin == null) continue;
 
-		public string ReadUserInput(string initialPrompt) {
-			if (! (initialPrompt == null)) {
-				Console.Write(initialPrompt + ": ");
+				if (pluginFilter(plugin)) result.Add(plugin);
 			}
 
-			StringBuilder sb = new StringBuilder();
-			ConsoleKeyInfo key;
-
-			do {
-				key = Console.ReadKey(true);
-				switch (key.Key) {
-					case ConsoleKey.Escape:
-					case ConsoleKey.Backspace:
-					case ConsoleKey.Home:
-					case ConsoleKey.End:
-						continue;
-					case ConsoleKey.Enter:
-						Console.SetCursorPosition(0, Console.CursorTop + 1);
-						break;
-					default:
-						sb.Append(key.KeyChar);
-						break;
-				}
-
-			} while (key.Key != ConsoleKey.Enter);
-
-			return sb.ToString();
+			return result;
 		}
 
-		public void ConsoleClearLine(int initPosition, int rowsToClear = 2) {
-			Console.SetCursorPosition(0, initPosition);
-			for (int i = 0; i < rowsToClear; i++) {
-				Console.WriteLine(new string(' ', Console.WindowWidth));
+		/// <summary>
+		/// Default filter which decides whether a given plugin is available for both logged-in and logged-off
+		/// users.
+		/// </summary>
+		/// <param name="plugin">The plugin to be considered.</param>
+		/// <returns>True if <paramref name="plugin"/> is available for all users.</returns>
+		internal static bool LoginLogoutFilter(IPlugin plugin) {
+			if (!(plugin is LoggedInOnlyPlugin && plugin is ILoggedOffOnlyPlugin)) {
+				if (!Session.ActiveSession.HasLoggedUser && plugin is LoggedInOnlyPlugin) return false;
+				if (Session.ActiveSession.HasLoggedUser && plugin is ILoggedOffOnlyPlugin) return false;
 			}
-			Console.SetCursorPosition(0, initPosition);
+
+			return true;
+		}
+		
+
+		/// <summary></summary>
+		/// <param name="input"></param>
+		/// <param name="plugins">Input collection of plugins to choose from.</param>
+		/// <param name="filteredPlugins">A list of filtered </param>
+		/// <returns>Flag whether a plugin could be found by the <paramref name="input"/> string.</returns>
+		internal static bool TryGetPluginFromInputString(string input, IReadOnlyList<IPlugin> plugins, out List<IPlugin> filteredPlugins) {
+			filteredPlugins = new List<IPlugin>();
+			input = input.ToLower();
+
+			if (string.IsNullOrEmpty(input)) return false;
+
+			if (input == "exit" || input == "quit") {
+				filteredPlugins.Add(ExitAppPlugin.Instance);
+				return true;
+			}
+
+			for (int i = 0; i < plugins.Count; i++) {
+
+				string pluginNameFirstWord = plugins[i].Name.Split()[0].ToLower();
+				bool matchesFirstWord = pluginNameFirstWord == input;
+
+				if (matchesFirstWord) filteredPlugins.Add(plugins[i]);
+			}
+
+			return filteredPlugins.Count == 1;
 		}
 	}
 }

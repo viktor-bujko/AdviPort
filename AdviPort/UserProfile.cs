@@ -1,24 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Text.Json;
 using AdviPort.ResponseObjects;
+using AdviPort.UI;
 
 namespace AdviPort {
+
+	/// <summary>
+	/// Class representing an instance of a user. This class contains information about user
+	/// as well as its identification (<code>UserName</code>, encrypted <code>Password</code> 
+	/// and <code>APIKey</code> used to perform API calls). Other instance properties are used
+	/// to improve and adapt application user interface or to cache information.
+	/// </summary>
 	class UserProfile {
-
 		public string APIKey { get; set; }
-
 		public string UserName { get; set; }
-
 		public string Password { get; set; }
+		public string LastSearchedFlight { get; set; }
 
+		/// <summary>
+		/// Only Airport instances may be stored in the dictionary due to lack of support of JSON library interface deserialization.
+		/// </summary>
 		public Dictionary<string, Airport> FavouriteAirports { get; set; }
-
 		public List<string> SchedulesHistory { get; set; }
-
-		public List<string> SavedFlights { get; set; }
+		public string MainPageStyle { get; set; } = "";
 
 		public UserProfile() { }
 
@@ -27,118 +31,30 @@ namespace AdviPort {
 			UserName = userName;
 			Password = password;
 			FavouriteAirports = new Dictionary<string, Airport>();
-			SchedulesHistory = new List<string>(10);	// 10 last successful schedule table queries should be saved into user's history
-			SavedFlights = new List<string>();
-		}
-	}
-
-	class FileSystemProfileDB : IUserChecker, IUserProfileCreator  {
-
-		private IUserProfileWriter ProfileWriter { get; }
-
-		private string ProfilesDirectoryPath { get; } = GeneralApplicationSettings.GetProfilesDirectoryPath();
-
-		public FileSystemProfileDB() {
-			ProfileWriter = new FileSystemProfileDBWriter();
+			SchedulesHistory = new List<string>(10);    // 10 last successful schedule table queries should be saved into user's history
 		}
 
-		public int CreateProfile(string userName, string password, string apiKey) {
+		/// <summary>
+		/// Changes user's preferred style of the main application page.
+		/// </summary>
+		/// <param name="profileWriter">Instance which is responsible for writing the changes to the user profile file.</param>
+		public void SetMainPageStyle(IUserProfileWriter profileWriter) {
+			int length = MainPageHandlerSelector.MainPageDesignNames.Count;
+			int currentLookIdx = MainPageHandlerSelector.MainPageDesignNames.IndexOf(MainPageStyle);
 
-			apiKey = Encryptor.Encrypt(apiKey);
-			password = Encryptor.Encrypt(password);
+			MainPageStyle = MainPageHandlerSelector.MainPageDesignNames[++currentLookIdx % length];
 
-			if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(apiKey)) {
-				Console.Error.WriteLine("The username nor API key cannot be an empty string.");
-				return 1;
-			}
-
-			if (password == null) { return 1; }
-
-			var userProfile = new UserProfile(userName, password, apiKey);
-
-			int writeExitCode = ProfileWriter.WriteUserProfile(userProfile);
-			if (writeExitCode == 0) {
-				Console.WriteLine("Registration of a new user is successful.");
-			}
-
-			return writeExitCode;
+			profileWriter.WriteUserProfile(this);
 		}
 
-		public UserProfile GetProfile(string userName) {
-			string[] profiles = GeneralApplicationSettings.SearchFiles(ProfilesDirectoryPath, GetProfileFileName(userName), requiredFiles: 1);
+		/// <summary>
+		/// Method which saves only 10 last successful searches for flight information.
+		/// </summary>
+		/// <param name="profileWriter">Instance which is responsible for writing the changes to the user profile file.</param>
+		public void TrimFlightsHistory(IUserProfileWriter profileWriter) {
+			SchedulesHistory = SchedulesHistory.GetRange(Math.Max(SchedulesHistory.Count - 10, 0), Math.Min(SchedulesHistory.Count, 10));
 
-			if (profiles == null) {
-				Console.Error.WriteLine("User not found.");
-				return null;
-			}
-
-			using var profileReader = GeneralApplicationSettings.GetTextReader(profiles);
-
-			string content = profileReader.ReadToEnd();
-
-			var profile = JsonSerializer.Deserialize<UserProfile>(content, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
-
-			return profile;
+			profileWriter.WriteUserProfile(this);
 		}
-
-		public bool UserExists(string userName) {
-
-			string[] profilePaths = GeneralApplicationSettings.SearchFiles(ProfilesDirectoryPath, GetProfileFileName(userName));
-
-			if (profilePaths == null) {
-				throw new ArgumentNullException("File not found");
-			}
-
-			// If true, userprofile file with such username can be created.
-			return profilePaths.Length == 1;
-		}
-
-		private string GetProfileFileName(string userName) => $"{userName}_userprofile.apt";
-	}
-
-	class FileSystemProfileDBWriter : IUserProfileWriter {
-
-		private string ProfilesDirectoryPath { get; }
-
-		private TextWriter FileWriter { get; set; }
-
-		public FileSystemProfileDBWriter() {
-			ProfilesDirectoryPath = GeneralApplicationSettings.GetProfilesDirectoryPath();
-		}
-
-		public int WriteUserProfile(UserProfile profile) {
-
-			try {
-				FileWriter = new StreamWriter(GetProfileFilePath(profile.UserName));
-			} catch {
-				Console.Error.WriteLine("Profile file for this user could not be created.");
-				return 1;
-			}
-
-			if (FileWriter is null) { return 1; }
-
-			using (FileWriter) {
-				try {
-					var options = new JsonSerializerOptions() {
-						WriteIndented = true
-					};
-
-					string serializedProfile = JsonSerializer.Serialize<UserProfile>(profile, options);
-
-					FileWriter.Write(serializedProfile);
-				} catch {
-					// Log the error 
-					// User profile should be deleted if anything goes wrong 
-					File.Delete(GetProfileFilePath(profile.UserName));
-					return 1;
-				}
-			}
-
-			Console.WriteLine("Changes written successfully.");
-			return 0;
-		}
-		private string GetProfileFilePath(string userName) => ProfilesDirectoryPath + Path.DirectorySeparatorChar + GetProfileFileName(userName);
-
-		private string GetProfileFileName(string userName) => $"{userName}_userprofile.apt";
 	}
 }

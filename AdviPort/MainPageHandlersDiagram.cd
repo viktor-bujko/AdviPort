@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="AdviPort.UI.MainPageHandlerSelector">
+    <Position X="11" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.UI.AbstractMainPageHandler" Collapsed="true">
+    <Position X="6.5" Y="2.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgBAAABAAAAAAAAAgAAKAAAAAAEAAgAAAAAAAAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="AdviPort.UI.ClassicMainPageHandler">
+    <Position X="5.25" Y="4" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAAAAAAAAAAAKAAAAAAEAQAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.UI.DecorativeMainPageHandler">
+    <Position X="10.75" Y="4" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="AdviPort.UI.DecorativeMainPageHandler.PageDecoration">
+        <TypeIdentifier>
+          <NewMemberFileName>UI\MainPageHandlers.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAICAgAEAABAAAAAAAAAgAAKAAAAAAEAQAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.UI.DescriptiveMainPageHandler">
+    <Position X="2.5" Y="4" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAABAAAAAAAAAAAAKBAAAAAEAQAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.UI.ShowLoggedUserMainPageHandler">
+    <Position X="7.75" Y="4" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAABAAAAAAAAAAAAKBAAAAAEAQAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.AeroDataBoxProvider" BaseTypeListCollapsed="true">
+    <Position X="18.75" Y="5.75" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAIAgAAAAAgAAAAABAAAABAAAAAAACAAAAAAA=</HashCode>
+      <FileName>DefaultAirportInfoProvider.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="1.8" />
+  </Class>
+  <Interface Name="AdviPort.UI.IMainPagePrinter">
+    <Position X="4" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAACAAAAAAEAAAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.UI.IMainPageHandler">
+    <Position X="6.5" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAABAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UI\MainPageHandlers.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.IAirportProvider">
+    <Position X="14.5" Y="3.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DefaultAirportInfoProvider.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.IAirportScheduleProvider">
+    <Position X="23.75" Y="3.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAA=</HashCode>
+      <FileName>DefaultAirportInfoProvider.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.IRunwayInfoProvider">
+    <Position X="20.75" Y="3.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DefaultAirportInfoProvider.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.IFlightInfoProvider">
+    <Position X="17.75" Y="3.75" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>DefaultAirportInfoProvider.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

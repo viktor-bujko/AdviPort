@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="AdviPort.Plugins.LoggedInOnlyPlugin">
+    <Position X="9.75" Y="1.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAQAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\GeneralPluginsAbstraction.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Left" Position="0.321" />
+  </Class>
+  <Class Name="AdviPort.Plugins.PluginSelector">
+    <Position X="19.5" Y="0.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAgAAAAAAAAAAIAAAAAAAAAAAAAAAAIAA=</HashCode>
+      <FileName>Plugins\GeneralPluginsAbstraction.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.Plugins.AddFavouriteAirportPlugin">
+    <Position X="7.5" Y="8.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAoAAAAAAAAAAQABAACCAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\FavouritesAirportPlugin.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.Plugins.RemoveFavouriteAirportPlugin">
+    <Position X="10" Y="8.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAoAAAAAAAAAAQABAAACAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\FavouritesAirportPlugin.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.Plugins.PrintScheduleAirport">
+    <Position X="5.5" Y="8.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAQABAAACAAAQAAEAAAAAAA=</HashCode>
+      <FileName>Plugins\InfoPlugins.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.Plugins.SearchFlightPlugin">
+    <Position X="14.5" Y="8.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAqAAAAAAAAAAQAAAAACAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\InfoPlugins.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.Plugins.AirportInfoPlugin">
+    <Position X="12.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAoAAAAAAAAAAQAAAACCAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\InfoPlugins.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.Plugins.LoginPlugin" BaseTypeListCollapsed="true">
+    <Position X="1" Y="5.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAoAAAAAAQAAAQABAAACAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\LoginLogoutPlugins.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="1.027" />
+  </Class>
+  <Class Name="AdviPort.Plugins.LogoutPlugin">
+    <Position X="3.25" Y="8.5" Width="2" />
+    <InheritanceLine Type="AdviPort.Plugins.LoggedInOnlyPlugin" FixedFromPoint="true">
+      <Path>
+        <Point X="10.625" Y="3.632" />
+        <Point X="10.625" Y="8.125" />
+        <Point X="4.25" Y="8.125" />
+        <Point X="4.25" Y="8.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAQAAAAAAAAAQAAAgAAAAAA=</HashCode>
+      <FileName>Plugins\LoginLogoutPlugins.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Left" Position="2.254" />
+  </Class>
+  <Class Name="AdviPort.Plugins.AboutAppPlugin">
+    <Position X="6.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAQAAAAAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\MainPagePlugins.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Left" Position="0.1" />
+  </Class>
+  <Class Name="AdviPort.Plugins.ExitAppPlugin">
+    <Position X="8.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAQAAAAAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\MainPagePlugins.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Left" Position="0.1" Collapsed="true" />
+  </Class>
+  <Class Name="AdviPort.Plugins.ChangeMainPageStylePlugin">
+    <Position X="16.5" Y="8.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAoAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\MainPagePlugins.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AdviPort.Plugins.RegisterProfilePlugin">
+    <Position X="6.5" Y="1" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAoAAAAAAQAAAwABAAACAAAQAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\RegisterPlugin.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Orientation="Left" Position="2.777" />
+  </Class>
+  <Interface Name="AdviPort.Plugins.IExecutablePlugin">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\GeneralPluginsAbstraction.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.Plugins.IPlugin">
+    <Position X="2.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\GeneralPluginsAbstraction.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.Plugins.ILoggedOffOnlyPlugin">
+    <Position X="2" Y="4" Width="2" />
+    <InheritanceLine Type="AdviPort.Plugins.IPlugin" ManuallyRouted="true" FixedFromPoint="true">
+      <Path>
+        <Point X="3" Y="3.425" />
+        <Point X="3" Y="3.7" />
+        <Point X="3" Y="3.7" />
+        <Point X="3" Y="4" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\GeneralPluginsAbstraction.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.Plugins.ILoginHandler">
+    <Position X="0.5" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\LoginLogoutPlugins.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="AdviPort.Plugins.ILogoutHandler">
+    <Position X="0.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Plugins\LoginLogoutPlugins.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

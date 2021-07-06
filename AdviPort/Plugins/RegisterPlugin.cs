@@ -1,11 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using AdviPort.UI;
 
 namespace AdviPort.Plugins {
-	class RegisterAPIKeyPlugin : ILoggedOffOnlyPlugin {
 
-		private static RegisterAPIKeyPlugin Instance { get; set; }
+	/// <summary>
+	/// Application plugin which handles the registration of a new user profile.
+	/// </summary>
+	class RegisterProfilePlugin : ILoggedOffOnlyPlugin {
+
+		private static RegisterProfilePlugin Instance { get; set; }
 
 		public string Name => "Register API key";
 
@@ -17,28 +24,26 @@ namespace AdviPort.Plugins {
 		private IUserPasswordCreator PasswordCreator { get; }
 		private IUserProfileCreator ProfileCreator { get; }
 
-		private RegisterAPIKeyPlugin(IUserInterfaceReader inputReader, IUserChecker userChecker, IUserPasswordCreator passwordCreator, IUserProfileCreator profileCreator) {
+		private RegisterProfilePlugin(IUserInterfaceReader inputReader, IUserChecker userChecker, IUserPasswordCreator passwordCreator, IUserProfileCreator profileCreator) {
 			InputReader = inputReader;
 			UserChecker = userChecker;
 			PasswordCreator = passwordCreator;
 			ProfileCreator = profileCreator;
 		}
 
-		internal static RegisterAPIKeyPlugin GetInstance(IUserInterfaceReader inputReader, IUserChecker userChecker, IUserPasswordCreator passwordCreator, IUserProfileCreator profileCreator) {
+		internal static RegisterProfilePlugin GetInstance(IUserInterfaceReader inputReader, IUserChecker userChecker, IUserPasswordCreator passwordCreator, IUserProfileCreator profileCreator) {
 			if (Instance == null) {
-				Instance = new RegisterAPIKeyPlugin(inputReader, userChecker, passwordCreator, profileCreator);
+				Instance = new RegisterProfilePlugin(inputReader, userChecker, passwordCreator, profileCreator);
 			}
 
 			return Instance;
 		}
 
-		public RegisterAPIKeyPlugin(IUserInterfaceReader inputReader, IUserDBHandler userDBHandler) {
-			InputReader = inputReader;
-			UserChecker = userDBHandler;
-			PasswordCreator = userDBHandler;
-			ProfileCreator = userDBHandler;
-		}
-
+		/// <summary>
+		/// <inheritdoc/>
+		/// Handles a new user profile registration.
+		/// </summary>
+		/// <returns></returns>
 		public int Invoke() {
 
 			var userName = InputReader.ReadUserInput("Please enter a name you want to register");
