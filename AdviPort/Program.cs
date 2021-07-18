@@ -178,14 +178,11 @@ namespace AdviPort {
 
 		internal static string GetProfilesDirectoryPath() {
 
-			Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
 			string profilesPath = SearchDir(AppDomain.CurrentDomain.BaseDirectory, "profiles");
-
-			Console.WriteLine($"profiles not found: {profilesPath == null}");
 
 			if (profilesPath == null) {
 				string current = AppDomain.CurrentDomain.BaseDirectory;
-				const int parents = 3;
+				const int parents = 4;
 				for (int i = 0; i < parents; i++) {
 					// Backing up from current directory "parents" times
 					current = Directory.GetParent(current).FullName;
