@@ -2,11 +2,16 @@
 
 ## Inštalácia programu
 
-Program `AdviPort`  je dostupný ako repozitár na [GitHub-e](https://github.com/viktor-bujko/AdviPort). Na samotnú inštaláciu je potrebné si repozitár naklonovať
+Program `AdviPort` je dostupný ako repozitár na [GitHub-e](https://github.com/viktor-bujko/AdviPort). 
+
+Na samotnú inštaláciu je potrebné repozitár naklonovať pomocou `git clone git@github.com:viktor-bujko/AdviPort.git` 
+a 
 
 ## Spustenie programu
 
-Program sa spúšťa z konzoly.
+Spustenie programu prebieha spustením `AdviPort.exe` súboru umiestneného v adresári `{RootApplicationDirectory}/bin/Release/net5.0/publish/` 
+
+Alternatívou je spustenie pomocou `dotnet AdviPort.dll` (po premiestnení do adresára obsahujúceho spomenutý .dll súbor).
 
 ## Ovládanie a práca s prostredím programu
 
@@ -53,9 +58,9 @@ Program pracuje s viacerými textovými súbormi.
 
 # Programátorská dokumentácia
 
-## Hlavné triedy programu
-
 ## Náčrt architektúry
+
+Dokumentácia jednotlivých tried, štruktúr, rozhraní a ich metód sa nachádza [tu](http://www.ms.mff.cuni.cz/~bujkov/adviport/documentation/).
 
 ### Aplikačný životný cyklus
 

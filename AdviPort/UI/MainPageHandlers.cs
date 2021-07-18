@@ -243,7 +243,7 @@ ______________________________________________________________
    /  /:/\:\     /  /:/\:\      /  /:/          \__\:\     /  /::\      /  /:/\:\     /  /:/\:\       \  \:\   
   /  /::\ \:\   /  /:/  \:\    /  /:/           /  /::\   /  /:/\:\    /  /:/  \:\   /  /::\ \:\       \__\:\  
  /__/:/\:\_\:\ /__/:/ \__\:|  /__/:/  ___    __/  /:/\/  /  /::\ \:\  /__/:/ \__\:\ /__/:/\:\_\:\      /  /::\ 
- \__\/  \:\/:/ \  \:\ /  /:/  |  |:| /  /\  /__/\/:/~~  /__/:/\:\_\:\ \  \:\ /  /:/ \__\/~|::\/:/     /  /:/\:\
+ \__\/  \:\/:/ \  \:\ /  /:/  |  |:| /  /\  /__/\/:/    /__/:/\:\_\:\ \  \:\ /  /:/ \__\/ |::\/:/     /  /:/\:\
       \__\::/   \  \:\  /:/   |  |:|/  /:/  \  \::/     \__\/  \:\/:/  \  \:\  /:/     |  |:|::/     /  /:/__\/
       /  /:/     \  \:\/:/    |__|:|__/:/    \  \:\          \  \::/    \  \:\/:/      |  |:|\/     /__/:/     
      /__/:/       \__\::/      \__\::::/      \__\/           \__\/      \  \::/       |__|:|       \__\/      
@@ -254,8 +254,8 @@ ________________________________________________________________________________
 
 		private DecorativeMainPageHandler() {
 			freeSpaces = 70;
-			sideDecoration = new PageDecoration(@"..\..\..\decorations\tower_decoration.txt");
-			planeDecoration = new PageDecoration(@"..\..\..\decorations\airplane_decoration.txt");
+			sideDecoration = new PageDecoration(@"decorations\tower_decoration.txt");
+			planeDecoration = new PageDecoration(@"decorations\airplane_decoration.txt");
 		}
 
 		/// <summary><inheritdoc/></summary>
@@ -263,7 +263,7 @@ ________________________________________________________________________________
 		/// <returns><inheritdoc/></returns>
 		public override int PrintMainPageContent(GeneralApplicationSettings settings) {
 			Console.WriteLine(MainPageHeader);
-			planeDecoration.Print(2, title: "«« MAIN MENU »»");
+			//planeDecoration.Print(2, title: "«« MAIN MENU »»");
 			Plugins = PluginSelector.GetAvailablePlugins(settings, PluginSelector.LoginLogoutFilter);
 			return PrintAvailablePlugins(Plugins);
 		}
@@ -275,6 +275,9 @@ ________________________________________________________________________________
 			var maxPrinted = int.MinValue;
 
 			int itemOrderNumber = 0;
+
+			planeDecoration.Print(2, title: "«« MAIN MENU »»");
+
 			foreach (var plugin in plugins) {
 				var printedLength = PrintMainPagePluginOption(plugin, ++itemOrderNumber);
 
@@ -344,8 +347,30 @@ ________________________________________________________________________________
 			}
 
 			public PageDecoration(TextReader reader) {
+				ReadDecorationFile(reader, out int maxWidth, out string[] decoLines);
+
+				MaxWidth = maxWidth;
+				Decoration = decoLines;
+				RowsSize = Decoration.Length;
+			}
+
+			public PageDecoration(string fileName) {
+
+				var foundFilePaths = GeneralApplicationSettings.SearchFiles(AppDomain.CurrentDomain.BaseDirectory, fileName);
+				TextReader reader = GeneralApplicationSettings.GetTextReader(foundFilePaths);
+
+				if (reader == null) return;
+
+				ReadDecorationFile(reader, out int maxWidth, out string[] decoLines);
+					
+				Decoration = decoLines;
+				RowsSize = Decoration.Length;
+				MaxWidth = maxWidth;
+			}
+
+			private void ReadDecorationFile(TextReader reader, out int maxWidth, out string[] decorationLines) {
 				string line;
-				int maxWidth = int.MinValue;
+				maxWidth = int.MinValue;
 				List<string> decor = new List<string>();
 
 				while (!((line = reader.ReadLine()) == null)) {
@@ -355,20 +380,7 @@ ________________________________________________________________________________
 					if (line.Length > maxWidth) maxWidth = line.Length;
 				}
 
-				MaxWidth = maxWidth;
-				Decoration = decor.ToArray();
-				RowsSize = Decoration.Length;
-			}
-
-			public PageDecoration(string fileName) {
-				try {
-					TextReader reader = new StreamReader(fileName);
-					var obj = new PageDecoration(reader);
-					RowsSize = obj.RowsSize;
-					Decoration = obj.Decoration;
-					RowsSize = obj.RowsSize;
-					MaxWidth = obj.MaxWidth;
-				} catch { /*throw new ArgumentException("The file with given fileName does not exist.");*/ }
+				decorationLines = decor.ToArray();
 			}
 
 			public void Print(int objectCount = 1, int spaces = 15, string title = "") {
@@ -406,33 +418,6 @@ ________________________________________________________________________________
 					}
 					Console.WriteLine();
 				}
-			}
-
-			public static List<PageDecoration> GetPageDecorations(string path) {
-
-				List<PageDecoration> result = new List<PageDecoration>();
-
-				var filePaths = GeneralApplicationSettings.SearchFiles(path, "*.txt");
-
-				if (filePaths == null) return result;
-
-				for (int i = 0; i < filePaths.Length; i++) {
-					var reader = GeneralApplicationSettings.GetTextReader(filePaths, i);
-					if (reader == null) continue;
-
-					result.Add(new PageDecoration(reader));
-				}
-
-				return result;
-			}
-
-			public override string ToString() {
-				var sb = new StringBuilder(RowsSize);
-				for (int i = 0; i < RowsSize; i++) {
-					sb.Append(Decoration[i]);
-					if (i < RowsSize - 1) sb.Append(Environment.NewLine);
-				}
-				return sb.ToString();
 			}
 		}
 	}

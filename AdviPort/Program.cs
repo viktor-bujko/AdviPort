@@ -80,7 +80,7 @@ namespace AdviPort {
 		/// <returns>An instance of application settings descriptor.</returns>
 		public static GeneralApplicationSettings GetAppSettings() {
 
-			var filePaths = SearchFiles(Directory.GetCurrentDirectory(), "*settings.json", requiredFiles: 1);
+			var filePaths = SearchFiles(AppDomain.CurrentDomain.BaseDirectory, "*settings.json", requiredFiles: 1);
 			GeneralApplicationSettings settings;
 
 			if (filePaths == null) {
@@ -177,7 +177,7 @@ namespace AdviPort {
 		}
 
 		internal static string GetProfilesDirectoryPath() {
-			string profilesPath = SearchDir(Directory.GetCurrentDirectory(), "profiles");
+			string profilesPath = SearchDir(AppDomain.CurrentDomain.BaseDirectory, "profiles");
 
 			if (profilesPath == null) {
 				string current = Directory.GetCurrentDirectory();

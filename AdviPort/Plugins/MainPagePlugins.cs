@@ -24,7 +24,7 @@ namespace AdviPort.Plugins {
 		/// </summary>
 		/// <returns><inheritdoc/></returns>
 		public override int Invoke() {
-			string[] paths = GeneralApplicationSettings.SearchFiles(Directory.GetCurrentDirectory(), "about.txt", requiredFiles: 1);
+			string[] paths = GeneralApplicationSettings.SearchFiles(AppDomain.CurrentDomain.BaseDirectory, "about.txt");
 
 			if (paths == null) {
 				Console.Error.WriteLine("A required file has not been found.");
