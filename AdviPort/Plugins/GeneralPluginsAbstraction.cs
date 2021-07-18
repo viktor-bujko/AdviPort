@@ -81,7 +81,7 @@ namespace AdviPort.Plugins {
 		internal static IPlugin GetPluginByName(string pluginName) {
 
 			FileSystemProfileDB appDatabase = new FileSystemProfileDB();
-			FileSystemProfileDBWriter profileWriter = new FileSystemProfileDBWriter();
+			//FileSystemProfileDBWriter profileWriter = new FileSystemProfileDBWriter();
 			UserInputReader inputReader = new UserInputReader();
 			AeroDataBoxProvider infoProvider = new AeroDataBoxProvider();
 
@@ -103,12 +103,12 @@ namespace AdviPort.Plugins {
 					inputReader,
 					infoProvider,
 					appDatabase,
-					profileWriter
+					appDatabase.ProfileWriter
 				),
 				"remove_favourite" => RemoveFavouriteAirportPlugin.GetInstance(
 					inputReader,
 					appDatabase,
-					profileWriter
+					appDatabase.ProfileWriter
 				),
 				"print_schedule" => PrintScheduleAirport.GetInstance(
 					inputReader,
@@ -118,12 +118,12 @@ namespace AdviPort.Plugins {
 				"search_by_flight" => new SearchFlightPlugin(
 					inputReader,
 					infoProvider,
-					profileWriter
+					appDatabase.ProfileWriter
 				),
 				"change_mainpage" => new ChangeMainPageStylePlugin(
 					inputReader,
 					appDatabase,
-					profileWriter
+					appDatabase.ProfileWriter
 				),
 				"airport_info" => new AirportInfoPlugin(
 					inputReader,

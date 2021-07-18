@@ -12,7 +12,7 @@ namespace AdviPort.UI {
 	/// <summary>
 	/// Provides a way to write changes for a given user profile.
 	/// </summary>
-	interface IUserProfileWriter {
+	public interface IUserProfileWriter {
 		int WriteUserProfile(UserProfile profile);
 	}
 
@@ -20,7 +20,7 @@ namespace AdviPort.UI {
 	/// Describes input reading contract. The contract can be fulfilled using
 	/// any available reader object.
 	/// </summary>
-	interface IUserInterfaceReader {
+	public interface IUserInterfaceReader {
 		string ReadUserInput(string initialPrompt = "Please enter your choice");
 	}
 
@@ -28,7 +28,7 @@ namespace AdviPort.UI {
 	/// Checks for user profile existence and attempts to retrieve 
 	/// a user profile.
 	/// </summary>
-	interface IUserChecker {
+	public interface IUserChecker {
 		bool UserExists(string userName);
 		UserProfile GetProfile(string userName);
 	}
@@ -36,15 +36,15 @@ namespace AdviPort.UI {
 	/// <summary>
 	/// Provides a method used to create a new user profile.
 	/// </summary>
-	interface IUserProfileCreator {
+	public interface IUserProfileCreator {
 		int CreateProfile(string userName, string password, string apiKey);
 	}
 
-	interface IUserPasswordCreator {
+	public interface IUserPasswordCreator {
 		string CreateUserPassword();
 	}
 
-	class UserInputReader : IUserInterfaceReader {
+	public class UserInputReader : IUserInterfaceReader {
 
 		public UserInputReader() { }
 
@@ -61,7 +61,7 @@ namespace AdviPort.UI {
 		}
 	}
 
-	class ConsolePasswordReader : IUserInterfaceReader {
+	public class ConsolePasswordReader : IUserInterfaceReader {
 		public static ConsolePasswordReader Instance { get; } = new ConsolePasswordReader();
 
 		private ConsolePasswordReader() { }
@@ -104,7 +104,7 @@ namespace AdviPort.UI {
 		}
 	}
 
-	class DefaultUserPasswordCreator : IUserPasswordCreator {
+	public class DefaultUserPasswordCreator : IUserPasswordCreator {
 
 		private static DefaultUserPasswordCreator Instance { get; set; }
 		private IUserInterfaceReader Reader { get; }
@@ -161,9 +161,9 @@ namespace AdviPort.UI {
 		}
 	}
 
-	interface IUserDBHandler : IUserChecker, IUserPasswordCreator, IUserProfileCreator { }
+	public interface IUserDBHandler : IUserChecker, IUserPasswordCreator, IUserProfileCreator { }
 
-	static class Encryptor {
+	public static class Encryptor {
 
 		private static readonly byte[] key = new byte[] {
 			0x64, 0x01, 0x6f, 0xe1, 0xbe, 0xa7, 0x51, 0xd6,
@@ -223,9 +223,9 @@ namespace AdviPort.UI {
 		}
 	}
 
-	class FileSystemProfileDB : IUserChecker, IUserProfileCreator {
+	public class FileSystemProfileDB : IUserChecker, IUserProfileCreator {
 
-		private IUserProfileWriter ProfileWriter { get; }
+		internal IUserProfileWriter ProfileWriter { get; }
 
 		private string ProfilesDirectoryPath { get; } = GeneralApplicationSettings.GetProfilesDirectoryPath();
 
@@ -285,59 +285,59 @@ namespace AdviPort.UI {
 		}
 
 		private string GetProfileFileName(string userName) => $"{userName}_userprofile.apt";
-	}
 
-	class FileSystemProfileDBWriter : IUserProfileWriter {
+		private class FileSystemProfileDBWriter : IUserProfileWriter {
 
-		private string ProfilesDirectoryPath { get; }
+			private string ProfilesDirectoryPath { get; }
 
-		private TextWriter FileWriter { get; set; }
+			private TextWriter FileWriter { get; set; }
 
-		public FileSystemProfileDBWriter() {
-			ProfilesDirectoryPath = GeneralApplicationSettings.GetProfilesDirectoryPath();
-		}
-
-		public int WriteUserProfile(UserProfile profile) {
-
-			try {
-				FileWriter = new StreamWriter(GetProfileFilePath(profile.UserName));
-			} catch {
-				Console.Error.WriteLine("Profile file for this user could not be created.");
-				return 1;
+			public FileSystemProfileDBWriter() {
+				ProfilesDirectoryPath = GeneralApplicationSettings.GetProfilesDirectoryPath();
 			}
 
-			if (FileWriter == null) { return 1; }
+			public int WriteUserProfile(UserProfile profile) {
 
-			using (FileWriter) {
 				try {
-					var options = new JsonSerializerOptions() {
-						WriteIndented = true
-					};
-
-					string serializedProfile = JsonSerializer.Serialize<UserProfile>(profile, options);
-
-					FileWriter.Write(serializedProfile);
+					FileWriter = new StreamWriter(GetProfileFilePath(profile.UserName));
 				} catch {
-					// Log the error 
-					// User profile should be deleted if anything goes wrong 
-					File.Delete(GetProfileFilePath(profile.UserName));
+					Console.Error.WriteLine("Profile file for this user could not be created.");
 					return 1;
 				}
+
+				if (FileWriter == null) { return 1; }
+
+				using (FileWriter) {
+					try {
+						var options = new JsonSerializerOptions() {
+							WriteIndented = true
+						};
+
+						string serializedProfile = JsonSerializer.Serialize<UserProfile>(profile, options);
+
+						FileWriter.Write(serializedProfile);
+					} catch {
+						// Log the error 
+						// User profile should be deleted if anything goes wrong 
+						File.Delete(GetProfileFilePath(profile.UserName));
+						return 1;
+					}
+				}
+
+				Console.WriteLine("Changes written successfully.");
+				return 0;
 			}
+			private string GetProfileFilePath(string userName) => ProfilesDirectoryPath + Path.DirectorySeparatorChar + GetProfileFileName(userName);
 
-			Console.WriteLine("Changes written successfully.");
-			return 0;
+			private string GetProfileFileName(string userName) => $"{userName}_userprofile.apt";
 		}
-		private string GetProfileFilePath(string userName) => ProfilesDirectoryPath + Path.DirectorySeparatorChar + GetProfileFileName(userName);
-
-		private string GetProfileFileName(string userName) => $"{userName}_userprofile.apt";
 	}
 
-	interface IMainPageNavigator {
+	public interface IMainPageNavigator {
 		string NavigateOrReadInput(int maxPlugins);
 	}
 
-	class DefaultMainPageNavigator : IMainPageNavigator {
+	public class DefaultMainPageNavigator : IMainPageNavigator {
 
 		private int cursorTop;
 		private int maxPlugins;
@@ -354,7 +354,11 @@ namespace AdviPort.UI {
 				Console.CursorTop = cursorTop;
 				Console.Write(message);
 
-				if (textReadState) { resultInput = ReadInput(); } else { resultInput = Navigate(0); }
+				if (textReadState) { 
+					resultInput = ReadInput(); 
+				} else {
+					resultInput = Navigate(0); 
+				}
 
 				resultInput = resultInput.Trim();
 			} while (resultInput == null || resultInput.Length == 0);
@@ -365,7 +369,10 @@ namespace AdviPort.UI {
 		private string ReadInput() {
 			var key = Console.ReadKey();
 
-			if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.DownArrow) { return Navigate(1); }
+			if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.DownArrow) {
+				return Navigate(1); 
+			}
+
 			if (key.Key == ConsoleKey.Spacebar || key.Key == ConsoleKey.Backspace) {
 				Console.CursorLeft = message.Length;
 				return ReadInput();
