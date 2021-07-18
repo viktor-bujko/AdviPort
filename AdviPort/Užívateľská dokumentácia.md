@@ -5,11 +5,11 @@
 Program `AdviPort` je dostupný ako repozitár na [GitHub-e](https://github.com/viktor-bujko/AdviPort). 
 
 Na samotnú inštaláciu je potrebné repozitár naklonovať pomocou `git clone git@github.com:viktor-bujko/AdviPort.git` 
-a 
+a projekt následne zostaviť pomocou `dotnet build -c Release`.
 
 ## Spustenie programu
 
-Spustenie programu prebieha spustením `AdviPort.exe` súboru umiestneného v adresári `{RootApplicationDirectory}/bin/Release/net5.0/publish/` 
+Spustenie programu prebieha spustením `AdviPort.exe` súboru umiestneného v adresári `{RootApplicationDirectory}/bin/Release/net5.0/`.
 
 Alternatívou je spustenie pomocou `dotnet AdviPort.dll` (po premiestnení do adresára obsahujúceho spomenutý .dll súbor).
 
