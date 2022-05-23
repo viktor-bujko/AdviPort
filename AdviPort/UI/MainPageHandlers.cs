@@ -42,6 +42,25 @@ namespace AdviPort.UI {
 			"decorative/descriptive"
 		};
 
+		public static Dictionary<string, AbstractMainPageHandlerFactory> MainPageDesignFactories { get; }
+			= new Dictionary<string, AbstractMainPageHandlerFactory>() {
+				{ "classic", ClassicMainPageHandlerFactory.GetFactory() },
+				{ "decorative", DecorativeMainPageHandlerFactory.GetFactory() },
+				{ "descriptive", DescriptiveMainPageHandlerFactory<ClassicMainPageHandler>.GetFactory() },
+				{ "decorative/descriptive", DescriptiveMainPageHandlerFactory<DecorativeMainPageHandler>.GetFactory() },
+				{ "descriptive/decorative", DescriptiveMainPageHandlerFactory<DecorativeMainPageHandler>.GetFactory() }
+			};
+
+		public static AbstractMainPageHandlerFactory SelectFactory(string style) {
+
+			if (style == null ||
+			   ! MainPageDesignFactories.TryGetValue(style, out var returnedFactory)) {
+				returnedFactory = MainPageDesignFactories["classic"];
+			}
+
+			return returnedFactory;
+		}
+
 		/// <summary>
 		/// Method responsible for selecting user interface style of application based on the application settings
 		/// or logged user's chosen interface style.
@@ -57,24 +76,17 @@ namespace AdviPort.UI {
 				mainPageStyle = Session.ActiveSession.LoggedUser.MainPageStyle;
 			} else mainPageStyle = settings.MainPageStyle;
 
-			AbstractMainPageHandler handler = mainPageStyle switch {
-				"" => ClassicMainPageHandler.Instance,
-				"classic" => ClassicMainPageHandler.Instance,
-				"decorative" => DecorativeMainPageHandler.Instance,
-				"descriptive" => DescriptiveMainPageHandler.GetInstance(ClassicMainPageHandler.Instance),
-				"decorative/descriptive" => DescriptiveMainPageHandler.GetInstance(DecorativeMainPageHandler.Instance),
-				"descriptive/decorative" => DescriptiveMainPageHandler.GetInstance(DecorativeMainPageHandler.Instance),
-				_ => null,
-			};
+			AbstractMainPageHandlerFactory factory = SelectFactory(mainPageStyle);
+			AbstractMainPageHandler handler =  factory.GetMainPageHandler();
 
-			if (handler == null) {
-				Console.Error.WriteLine("Unsupported main page printer.");
-				handler = ClassicMainPageHandler.Instance;
+			if (handler == null)
+				throw new ArgumentNullException("Handler cannot be null!");
+
+			if (Session.ActiveSession.HasLoggedUser) {
+				handler = new LoggedUserMainPageHandlerFactory(handler).GetMainPageHandler();
 			}
 
-			return Session.ActiveSession.HasLoggedUser 
-						? ShowLoggedUserMainPageHandler.GetInstance(handler) 
-						: handler;
+			return handler;
 		}
 	}
 
@@ -187,7 +199,7 @@ namespace AdviPort.UI {
 	class ClassicMainPageHandler : AbstractMainPageHandler {
 
 		// Only a single instance of this type is expected to be needed.
-		public static ClassicMainPageHandler Instance { get; } = new ClassicMainPageHandler();
+		//public static AbstractMainPageHandler Instance { get; } = 
 		public sealed override string MainPageHeader => @"
  █████╗ ██████╗ ██╗   ██╗██╗██████╗  ██████╗ ██████╗ ████████╗
 ██╔══██╗██╔══██╗██║   ██║██║██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
@@ -197,7 +209,7 @@ namespace AdviPort.UI {
 ╚═╝  ╚═╝╚═════╝   ╚═══╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝    
 ______________________________________________________________
 ";
-		private ClassicMainPageHandler() { }
+		public ClassicMainPageHandler() {}
 
 		/// <summary><inheritdoc/></summary>
 		/// <param name="settings"><inheritdoc/></param>
@@ -231,8 +243,6 @@ ______________________________________________________________
 	/// </summary>
 	class DecorativeMainPageHandler : AbstractMainPageHandler {
 
-		public static DecorativeMainPageHandler Instance { get; } = new DecorativeMainPageHandler();
-
 		private readonly int freeSpaces;
 		private readonly PageDecoration sideDecoration, planeDecoration;
 
@@ -252,7 +262,7 @@ ______________________________________________________________
 ______________________________________________________________________________________________________________
 ";
 
-		private DecorativeMainPageHandler() {
+		public DecorativeMainPageHandler() {
 			freeSpaces = 70;
 			sideDecoration = new PageDecoration(@"decorations\tower_decoration.txt");
 			planeDecoration = new PageDecoration(@"decorations\airplane_decoration.txt");
