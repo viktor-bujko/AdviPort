@@ -64,7 +64,7 @@ namespace AdviPort {
 	/// </summary>
 	class GeneralApplicationSettings {
 
-		private static readonly string[] defaultStringArr = { };
+		private static readonly string[] defaultStringArr = Array.Empty<string>();
 		public string ApiKeyPath { get; set; }
 		public string[] SubCommands { get; set; } = defaultStringArr;
 		public string[] AvailablePlugins { get; set; } = defaultStringArr;

@@ -9,6 +9,12 @@
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
   <ItemGroup>
+    <Compile Remove="profilesa\**" />
+    <EmbeddedResource Remove="profilesa\**" />
+    <None Remove="profilesa\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="about.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -21,10 +27,6 @@
     <None Update="settings.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="profilesa\" />
   </ItemGroup>
 
  
