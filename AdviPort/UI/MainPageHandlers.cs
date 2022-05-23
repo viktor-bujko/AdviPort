@@ -246,7 +246,7 @@ ______________________________________________________________
 		private readonly int freeSpaces;
 		private readonly PageDecoration sideDecoration, planeDecoration;
 
-		public override string MainPageHeader => @"
+		public sealed override string MainPageHeader => @"
       ___           ___                                                    ___           ___                   
      /  /\         /  /\          ___            ___         ___          /  /\         /  /\          ___     
     /  /::\       /  /::\        /  /\          /__/\       /  /\        /  /::\       /  /::\        /__/\    
@@ -460,7 +460,7 @@ ________________________________________________________________________________
 		public override int PrintMainPageContent(GeneralApplicationSettings settings) {
 			Console.WriteLine(MainPageHeader);
 			Plugins = PluginSelector.GetAvailablePlugins(settings, PluginSelector.LoginLogoutFilter);
-			return BaseHandler.PrintAvailablePlugins(Plugins);
+			return this.PrintAvailablePlugins(Plugins);
 		}
 
 		/// <summary><inheritdoc/></summary>
